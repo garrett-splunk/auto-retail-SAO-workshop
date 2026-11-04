@@ -399,6 +399,22 @@ def ask(graph, request: str, user_id: str = USER_ID) -&gt; dict:
       <tr><td><code>model</code></td><td><code>OPENAI_MODEL</code></td><td>Compare cost and quality per LLM</td></tr>
       <tr><td><code>failure_mode</code></td><td><code>mode()</code> from <code>failure.py</code></td><td>Separate clean traffic from the planted failure</td></tr>
     </table>
+    <h3>Each piece of the code, explained</h3>
+    <table>
+      <tr><th>Piece</th><th>What it does</th><th>Why it's written this way</th></tr>
+      <tr><td><code>metadata={...}</code></td><td>A dictionary of key/value pairs. The SDK attaches it to every trace this call produces, so the console can filter and group by those keys.</td><td>It travels in the same <code>RunnableConfig</code> as the callback, so the tags and the trace always go together. Keys come from your worksheet.</td></tr>
+      <tr><td><code>os.getenv("BUSINESS_UNIT", "dealer-web-chat")</code></td><td><code>os.getenv(name, default)</code> reads an environment variable. If <code>BUSINESS_UNIT</code> is set (in <code>.env</code> or the shell) it returns that value. If it isn't, it returns the second argument, <code>"dealer-web-chat"</code>.</td><td>The business unit isn't in the scenario, so the default is an assumption. Using an environment variable means you can change it without editing code, for example to run the same agent as another business unit.</td></tr>
+      <tr><td><code>os.getenv("OPENAI_MODEL", "gpt-4.1-mini")</code></td><td>Reads the same setting the agent uses to pick its model, with a fallback name.</td><td>The tag always matches the model that actually served the run, so you can compare cost and quality per model. If the fallback differs from what <code>agent/llm.py</code> really uses, the tag would be wrong, so keep them aligned.</td></tr>
+      <tr><td><code>data.RECORDS.get(user_id, {})</code></td><td><code>data.RECORDS</code> is the dictionary of shoppers in <code>data.py</code>. <code>.get(user_id, {})</code> looks up this shopper and returns an empty dictionary if the ID isn't found, instead of raising <code>KeyError</code>.</td><td>An unknown shopper shouldn't crash tracing. It also needs <code>import data</code> at the top of <code>app.py</code>.</td></tr>
+      <tr><td><code>.get("dealer_id", "unknown")</code></td><td>Takes that shopper's record and reads its <code>dealer_id</code> field, or returns <code>"unknown"</code> if there isn't one.</td><td>Chaining the two <code>.get</code> calls means a missing shopper, or a shopper with no dealer, produces <code>"unknown"</code> and never an error. The trace still gets sent and you can filter for the gaps.</td></tr>
+      <tr><td><code>"shopper_id": user_id</code></td><td>The <code>user_id</code> argument that <code>ask()</code> was called with, copied straight in.</td><td>No lookup needed. It lets you find every trace for one shopper.</td></tr>
+      <tr><td><code>mode()</code></td><td>A function from <code>failure.py</code>. It reads <code>FAILURE_MODE</code> from the environment and returns <code>none</code>, <code>fabricated_citation</code> and so on.</td><td>It's called inside <code>ask()</code>, so each trace records the mode it actually ran with. That is what lets you split clean traffic from failure traffic in the console.</td></tr>
+      <tr><td><code>tags=["auto-retail"]</code></td><td>A flat list of labels, separate from the key/value metadata.</td><td>Optional. Use it for a quick label that doesn't need a value. The docs show tags next to metadata.</td></tr>
+    </table>
+    <div class="callout"><b class="t">The pattern in one line</b>
+      <code>os.getenv("NAME", "default")</code> means "use the setting if someone set it, otherwise use this fallback". <code>dict.get(key, fallback)</code> means the same thing for a dictionary. Both avoid errors and keep the trace flowing.</div>
+    <div class="callout warn"><b class="t">Metadata is evaluated per question</b>
+      These expressions run each time <code>ask()</code> is called, so <code>failure_mode</code> and <code>dealer_id</code> follow the question being asked. If you built the dictionary once at the top of the file, every trace would carry the same values.</div>
     <p>State your assumptions at the readout: the <code>business_unit</code> default is made up, <code>dealer_id</code> means the dealer site the shopper is on, and <code>model</code> means the LLM, not the vehicle model.</p>
     <div class="callout warn"><b class="t">Common mistakes</b>
       <ul>
