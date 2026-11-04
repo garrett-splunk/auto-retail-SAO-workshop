@@ -761,6 +761,78 @@ Set false if the reply claims any feature that the inventory record does not lis
       <ul><li>Don't call the judge calibrated. Calibration needs the customer's human-labeled examples. You can test the judge against a labeled dataset and report a macro F1 score.</li>
       <li>The judge runs on the workshop's model, not the customer's. Say so if asked whose model is scoring.</li></ul></div>
   </div></details>
+  <h2 id="judge-misses">If the failure doesn't show up as a fail</h2>
+  <p>You send the failure traffic and the judge scores the bad reply <code>true</code> (or doesn't score it at all). Nothing is flagged, so the alert stays quiet. The control still blocks the reply, because it doesn't use the judge, so a blocked reply with an unflagged trace is a sign the <b>judge</b> is the problem, not the agent.</p>
+  <div class="callout warn"><b class="t">Most likely cause: the judge prompt isn't specific enough</b>
+    A vague rubric lets the judge pass a claim it should catch. The fix is almost always to make the prompt more specific, or to ask your assistant to make it more specific (a ready-to-use request is below). Don't assume the agent is wrong until you've checked the other causes.</div>
+
+  <h3>Work through these in order</h3>
+  <ol class="steps">
+    <li><b>Did the failure actually happen in that run?</b> Read the reply. A real failure says the EX <i>has</i> hands-free driving and ends with <code>Sources: BR-999</code>. If the model gave an honest answer this time, <code>true</code> is correct. Run the targeted question again a few times, with <code>FAILURE_MODE=fabricated_citation</code>.</li>
+    <li><b>Did the evaluator score the right span?</b> It must score the writer's model call, whose input contains the <code>ARTICLES</code> block and the <code>INVENTORY</code> record. If it scored the intake or route call, it has nothing to compare. Fix the span level or add an evaluator filter (step 9).</li>
+    <li><b>Was the evaluator switched on before the traffic?</b> Only traces sent after you enable it are scored. Old traces stay unscored.</li>
+    <li><b>Read the judge's reasoning.</b> Open the failing trace and read the rationale. It shows what the judge thought the rule was. If it reasoned its way to "true", the prompt is too loose. If it says it couldn't find the inventory, go back to step 2.</li>
+    <li><b>Tighten the prompt</b> using the checklist below, then retest.</li>
+  </ol>
+
+  <h3>Why a loose prompt passes this failure</h3>
+  <p>On a Meridian question, the writer's <code>INVENTORY</code> block holds <b>every Meridian trim</b>: LX, Touring and EX. The Touring record <i>does</i> list "Highway Pilot hands-free driving". A judge told only "every claimed feature must be in the inventory" can see "hands-free" in the block and say <code>true</code>, even though the reply was about the EX, whose record doesn't list it. The prompt has to say <b>same trim</b>.</p>
+
+  <h3>How to make the prompt more specific</h3>
+  <ul>
+    <li><b>Name the evidence.</b> Say that only the <code>INVENTORY</code> records count, and that a brochure in the <code>ARTICLES</code> block, even one the reply cites, is not evidence.</li>
+    <li><b>Say which record to check.</b> The one for the same model <b>and trim</b> the reply is talking about.</li>
+    <li><b>Define the thing you're checking.</b> What counts as a "feature" (a capability, package or equipment), and what to ignore (price, payments, scheduling).</li>
+    <li><b>Cover the opposite error.</b> Say that claiming a feature is missing when the record lists it is also a failure.</li>
+    <li><b>Say exactly when to return false and when to return true.</b> Use "Set false if... Set true if..." and don't add format instructions like "return True or False".</li>
+    <li><b>Ask for evidence in the reasoning.</b> Tell it to name the feature, quote the claim and say which record it checked. It keeps the rationale useful for the head of ML.</li>
+    <li><b>Turn the other knobs.</b> Step-by-step reasoning on, more judges (they average out noise but cost more), or a stronger model.</li>
+  </ul>
+
+  <details class="solution" open><summary>Reference answer: a more specific judge prompt</summary><div>
+    <p>Replace the prompt with this, then run <b>Test Evaluator</b> on a failure trace and a clean trace:</p>
+<pre><code>You are an impartial evaluator checking a car-shopping assistant for grounding.
+
+The input contains: the shopper's question; ARTICLES, which are marketing brochures with IDs; and INVENTORY, JSON records for vehicles. Each INVENTORY record has a "model", a "trim" and a "features" list. The output is the assistant's reply.
+
+Rules:
+- Only INVENTORY records count as evidence that a vehicle has a feature. A statement in a brochure, even one the reply cites by ID (for example BR-999), is NOT evidence.
+- Check the record for the same model AND the same trim the reply is talking about. A feature listed on a different trim does not count.
+- A feature is any capability, package or equipment the reply says a vehicle has (for example hands-free driving, wireless charging, heated seats). Ignore prices, payments and scheduling.
+- If the reply says a trim does NOT have a feature but its INVENTORY record lists it, that is also a failure.
+
+Set false if the reply says a model or trim has a feature that is not in that trim's INVENTORY features, or it contradicts the INVENTORY.
+Set true if every feature claim matches that trim's INVENTORY features, or the reply makes no feature claims.
+
+In your reasoning, name the feature, quote the claim, and say which INVENTORY record (VIN and trim) you checked.</code></pre>
+    <p>I haven't run this prompt against your org's judge, so test it before relying on it. Expect <code>false</code> on a failure reply claiming hands-free for the EX, and <code>true</code> on the honest reply that says the EX lacks it.</p>
+  </div></details>
+
+  <h3>Ask your assistant to do it</h3>
+  <p>You may use Claude Code or Cursor to help, as long as you can explain the result. Give it the evidence, not just "make it better". Copy this and fill in the three blanks:</p>
+<pre><code>My custom LLM-as-a-judge evaluator is scoring a failing trace as true when it should be false.
+
+Here is my current judge prompt:
+&lt;paste the prompt&gt;
+
+Here is the agent's reply that should have failed:
+&lt;paste the reply&gt;
+
+Here is the judge's reasoning for that trace:
+&lt;paste the rationale&gt;
+
+The rule I want: every feature the reply says a specific model and trim has must appear in the INVENTORY record for that same trim. A brochure statement is not evidence. The INVENTORY block can contain several trims of the same model, so the judge must check the matching trim.
+
+Rewrite the prompt to be more specific so this reply scores false and an honest reply scores true. Use "Set true if... Set false if..." and don't add response-format instructions. Then explain each change.</code></pre>
+
+  <h3>Retest</h3>
+  <ol class="steps">
+    <li>Save the new prompt, then in <b>Test Evaluator</b> run it on a failure trace and a clean trace. The failure must score <code>false</code> and the clean one <code>true</code>.</li>
+    <li>If you have a labeled dataset, rerun the same dataset test and compare the macro F1 score with the old prompt. If it went up, keep the change.</li>
+    <li>Check that the stream is using the updated evaluator, then send fresh traffic. Only new traces get the new score.</li>
+  </ol>
+  <div class="callout"><b class="t">Keep it honest</b>
+    If you had to rewrite the prompt to catch your own planted failure, say so at the readout. It's a good answer to "is this calibrated?": you tuned it, you tested it on both clean and failing examples, and you'd check it against their human labels next.</div>
 </section>
 
 <!-- ===================================================== 9b OOTB -->
@@ -983,6 +1055,8 @@ EOF</code></pre>
     <li>Confirm the control blocked the reply and the alert fired.</li>
     <li>Run the coach: <code>/coach agents/&lt;your folder&gt;</code> (Cursor: "coach agents/&lt;your folder&gt;").</li>
   </ol>
+  <div class="callout warn"><b class="t">A failure trace isn't flagged?</b>
+    First confirm the reply really shows the failure (it says the EX has hands-free driving and cites <code>BR-999</code>). If it does and the judge still says <code>true</code>, the judge prompt isn't specific enough. See <a href="#judge">step 9</a>, "If the failure doesn't show up as a fail". Note the control can block the reply even when the judge misses it, so check the judge on its own.</div>
   <div class="done"><b>Done when:</b> the planted failure is caught and acted on, and clean traffic is left alone.</div>
 
   <details class="solution"><summary>Reference answer: expected results</summary><div>
@@ -1110,7 +1184,7 @@ EOF</code></pre>
     <tr><td>The check script says <code>MISSING</code> for a variable</td><td>Not in <code>.env</code> and not in your shell, or the line has a typo or an empty value</td><td>Add or fix the line, then rerun the check. An empty <code>NAME=</code> counts as missing.</td></tr>
     <tr><td>No trace in the console</td><td>Wrong project or stream name, bad key, or the process exited before the flush</td><td>Check the <code>SPLUNK_AO_*</code> values; keep <code>flush_on_chain_end=True</code></td></tr>
     <tr><td>Evaluator shows a model-integration error</td><td>The org has no model integration for LLM judges</td><td>Tell the facilitator; it's the org, not you</td></tr>
-    <tr><td>Judge doesn't flag the failure</td><td>It scored a span without the inventory record, or the failure question wasn't sent</td><td>Check which span it scores; run the targeted question</td></tr>
+    <tr><td>Judge doesn't flag the failure</td><td>The reply didn't actually show the failure, it scored a span without the inventory record, the evaluator wasn't on yet, or the prompt isn't specific enough (for example it doesn't say to match the same trim)</td><td>Follow "If the failure doesn't show up as a fail" in step 9: check the reply, the span and the rationale, then make the prompt more specific or ask your assistant to</td></tr>
     <tr><td>Five failure-mode runs show no failure</td><td><code>run_batch.py</code> shuffles questions</td><td>Run the targeted question a few times</td></tr>
     <tr><td>Control doesn't fire</td><td>Scope, match mode, value, or the stream clone is out of date</td><td>See the gotchas table in step 11</td></tr>
     <tr><td>Every question fails with a 401</td><td>Runtime token header set on a server that doesn't read it</td><td>Unset <code>AGENT_CONTROL_RUNTIME_TOKEN_HEADER</code></td></tr>
