@@ -256,6 +256,54 @@ footer{margin-top:40px;color:var(--muted);font-size:13px}
   --brief scenarios/auto-retail/brief.yaml \
   --out agents/auto-retail-langgraph</code></pre>
 
+  <h2>Where the files are</h2>
+  <p>Everything below is relative to the repo root. <code>&lt;your folder&gt;</code> is the agent folder the build skill made, for example <code>agents/auto-retail-langgraph</code>.</p>
+<pre><code>agents/&lt;your folder&gt;/
+  app.py              # entry point; ask() lives here (you instrument this)
+  run_batch.py        # replays questions.txt: python run_batch.py 10
+  ui.py               # optional chat page (stretch)
+  data.py             # mock brochures, inventory, shoppers, the planted BR-999
+  failure.py          # reads FAILURE_MODE; mode() and active()
+  questions.txt       # ~30 shopper questions, one per line
+  requirements.txt    # packages for pip install -r
+  brief.yaml          # the scenario brief the agent was built from
+  README.md           # the agent's own readme and its "what you still have to do" list
+  .env                # YOUR settings and keys (never commit or share)
+  .env.example        # the template .env is copied from
+  agent/
+    graph.py          # the four-step LangGraph
+    nodes.py          # intake, route, resolve, write (the @control goes here)
+    tools.py          # search_inventory, estimate_payment, schedule_test_drive
+    llm.py            # the one model client every step uses
+    state.py          # the data passed between steps
+  readout/            # your own deliverables
+    worksheet.md  success-criteria.md  instrumentation-notes.md</code></pre>
+  <table>
+    <tr><th>File</th><th>Full path</th><th>When you touch it</th></tr>
+    <tr><td><code>questions.txt</code></td><td><code>agents/&lt;your folder&gt;/questions.txt</code></td><td>Read by <code>run_batch.py</code>. Lines starting with <code>#</code> are skipped. Add your own questions here.</td></tr>
+    <tr><td><code>requirements.txt</code></td><td><code>agents/&lt;your folder&gt;/requirements.txt</code></td><td>Installed with <code>pip install -r requirements.txt</code>. Add <code>splunk-ao[langchain]</code> and the pins here after the SDK step.</td></tr>
+    <tr><td><code>.env</code></td><td><code>agents/&lt;your folder&gt;/.env</code></td><td>Model gateway, <code>SPLUNK_AO_*</code> and <code>AGENT_CONTROL_*</code> settings. Created from <code>.env.example</code>.</td></tr>
+    <tr><td><code>app.py</code></td><td><code>agents/&lt;your folder&gt;/app.py</code></td><td>Callback, metadata and control init (steps 5, 6, 11).</td></tr>
+    <tr><td><code>data.py</code></td><td><code>agents/&lt;your folder&gt;/data.py</code></td><td>Add <code>dealer_id</code> to each shopper (step 6).</td></tr>
+    <tr><td><code>failure.py</code></td><td><code>agents/&lt;your folder&gt;/failure.py</code></td><td>Don't edit. <code>FAILURE_MODE</code> switches the planted failure.</td></tr>
+    <tr><td><code>run_batch.py</code></td><td><code>agents/&lt;your folder&gt;/run_batch.py</code></td><td>Don't edit. Run it for traffic (step 7).</td></tr>
+    <tr><td><code>agent/nodes.py</code></td><td><code>agents/&lt;your folder&gt;/agent/nodes.py</code></td><td>Add the <code>@control</code> function (step 11).</td></tr>
+    <tr><td><code>agent/graph.py</code>, <code>tools.py</code>, <code>llm.py</code>, <code>state.py</code></td><td><code>agents/&lt;your folder&gt;/agent/</code></td><td>Leave alone. Instrumentation doesn't need them.</td></tr>
+    <tr><td>Your deliverables</td><td><code>agents/&lt;your folder&gt;/readout/</code></td><td>Save the worksheet, success criteria and notes here.</td></tr>
+  </table>
+  <p>Outside your agent folder:</p>
+  <table>
+    <tr><th>What</th><th>Path (from the repo root)</th></tr>
+    <tr><td>Start here, the step list</td><td><code>START-HERE.md</code></td></tr>
+    <tr><td>Workshop host and model gateway notes</td><td><code>LAB-ENVIRONMENT.md</code></td></tr>
+    <tr><td>The scenario and its brief</td><td><code>scenarios/auto-retail/SCENARIO.md</code>, <code>scenarios/auto-retail/brief.yaml</code></td></tr>
+    <tr><td>Worksheet templates</td><td><code>worksheets/design-worksheet.md</code>, <code>worksheets/success-criteria.md</code></td></tr>
+    <tr><td>What coaches look for</td><td><code>worksheets/feedback-guide.md</code></td></tr>
+    <tr><td>Worked alert and control examples, proxy fix</td><td><code>coaching/alert-example.md</code>, <code>coaching/control-example.py</code>, <code>coaching/proxy-fix.md</code></td></tr>
+    <tr><td>The build skill</td><td><code>.claude/skills/build-agent-langgraph/</code></td></tr>
+    <tr><td>Scaffold and skeleton check scripts</td><td><code>shared/scaffold.py</code>, <code>shared/check_skeleton.py</code></td></tr>
+  </table>
+
   <h2>Set up and smoke-test</h2>
 <pre><code>cd agents/auto-retail-langgraph
 python3 -m venv .venv
@@ -298,6 +346,7 @@ FAILURE_MODE=fabricated_citation python app.py "Does the Meridian EX have hands-
 <section id="setup" data-group="Instrument" data-title="4. Install the SDK and set variables">
   <h1>4. Install the SDK and set variables</h1>
   <p class="lead">Before any code, give the agent the SDK and tell it where to send traces.</p>
+  <p><span class="chip">Files</span> <code>agents/&lt;your folder&gt;/.env</code>, <code>agents/&lt;your folder&gt;/requirements.txt</code></p>
   <ol class="steps">
     <li>Install the SDK in the agent's venv:
 <pre><code>pip install "splunk-ao[langchain]"</code></pre></li>
@@ -318,7 +367,7 @@ SPLUNK_AO_AGENT_STREAM=&lt;your-name&gt;-auto-retail</code></pre></li>
 <pre><code>module 'langchain' has no attribute 'debug'</code></pre>
     <p>The SDK pulled in <code>langchain</code> 1.x alongside <code>langchain-core</code> 0.3.x. Pin it back:</p>
 <pre><code>pip install "langchain&gt;=0.3,&lt;1.0"</code></pre>
-    <p>Then record it in <code>requirements.txt</code> so a fresh venv works:</p>
+    <p>Then record it in <code>agents/&lt;your folder&gt;/requirements.txt</code> so a fresh venv works:</p>
 <pre><code>langgraph&gt;=0.2,&lt;1.0
 langchain&gt;=0.3,&lt;1.0
 langchain-core&gt;=0.3,&lt;1.0
@@ -332,6 +381,7 @@ splunk-ao[langchain]</code></pre>
 <section id="callback" data-group="Instrument" data-title="5. Add the callback">
   <h1>5. Add the callback</h1>
   <p class="lead">One object, attached to the graph call, inside <code>ask()</code> in <code>app.py</code> and nowhere else.</p>
+  <p><span class="chip">File</span> <code>agents/&lt;your folder&gt;/app.py</code></p>
   <p>Docs: <a href="https://agent-observability-docs.splunk.com/sdk-api/third-party-integrations/langchain/langchain" target="_blank" rel="noopener">LangChain integration</a>. Work from the docs first; the answer is below.</p>
   <ol class="steps">
     <li>Import the handler.</li>
@@ -365,6 +415,7 @@ def ask(graph, request: str, user_id: str = USER_ID) -&gt; dict:
 <section id="metadata" data-group="Instrument" data-title="6. Add metadata">
   <h1>6. Add metadata</h1>
   <p class="lead">Tag every trace with what the customer wants to filter by. The keys come from your worksheet.</p>
+  <p><span class="chip">Files</span> <code>agents/&lt;your folder&gt;/app.py</code> (the metadata), <code>agents/&lt;your folder&gt;/data.py</code> (the <code>dealer_id</code> field)</p>
   <ol class="steps">
     <li>Add a <code>metadata</code> dictionary to the same <code>RunnableConfig</code>.</li>
     <li>Use the five keys: <code>business_unit</code>, <code>dealer_id</code>, <code>shopper_id</code>, <code>model</code>, <code>failure_mode</code>.</li>
@@ -373,13 +424,13 @@ def ask(graph, request: str, user_id: str = USER_ID) -&gt; dict:
   <div class="done"><b>Done when:</b> a trace in the console shows your metadata.</div>
 
   <details class="solution"><summary>Reference answer: the code</summary><div>
-    <p>In <code>data.py</code>, give each shopper a dealer:</p>
+    <p>In <code>agents/&lt;your folder&gt;/data.py</code>, give each shopper a dealer:</p>
 <pre><code>RECORDS = {
     "S-10001": {"name": "...", "dealer_id": "D-LAKESIDE", ...},
     "S-10002": {"name": "...", "dealer_id": "D-NORTHGATE", ...},
     "S-10003": {"name": "...", "dealer_id": "D-EASTFIELD", ...},
 }</code></pre>
-    <p>In <code>app.py</code>, add <code>import data</code> at the top and extend the config:</p>
+    <p>In <code>agents/&lt;your folder&gt;/app.py</code>, add <code>import data</code> at the top and extend the config:</p>
 <pre><code>config = RunnableConfig(
     callbacks=[callback],
     metadata={
@@ -430,6 +481,7 @@ def ask(graph, request: str, user_id: str = USER_ID) -&gt; dict:
 <section id="traffic" data-group="Instrument" data-title="7. Send traffic and find the trace">
   <h1>7. Send traffic and find the trace</h1>
   <p class="lead">Run one question, find the trace, then send a batch so there is something to look at.</p>
+  <p><span class="chip">Files</span> <code>agents/&lt;your folder&gt;/run_batch.py</code> replays <code>agents/&lt;your folder&gt;/questions.txt</code>. Run both from inside <code>agents/&lt;your folder&gt;/</code> with the venv active.</p>
 <pre><code>python app.py "Does the Meridian EX have hands-free highway driving?"</code></pre>
   <p>In the console: main menu, select your project, select your agent stream, open <b>Traces</b>.</p>
   <h3>Send a batch</h3>
@@ -457,7 +509,7 @@ FAILURE_MODE=fabricated_citation python run_batch.py 5</code></pre>
 <!-- ===================================================== 8 NOTES -->
 <section id="notes" data-group="Instrument" data-title="8. Instrumentation notes">
   <h1>8. Instrumentation notes</h1>
-  <p class="lead">Answer four questions in your own words, two or three sentences each. Keep them with your worksheet as <code>readout/instrumentation-notes.md</code>. Your coach will ask about them.</p>
+  <p class="lead">Answer four questions in your own words, two or three sentences each. Keep them with your worksheet as <code>agents/&lt;your folder&gt;/readout/instrumentation-notes.md</code>. Your coach will ask about them.</p>
   <ol>
     <li>Where does a trace start and end in your agent, and why there?</li>
     <li>Which parts of a run became which kind of span, and why?</li>
@@ -574,11 +626,11 @@ Set false if the reply claims any feature that the inventory record does not lis
   </table>
 
   <h2>Half 2: wire it into the agent (code)</h2>
-  <p>Controls only fire on steps decorated for them. Three changes:</p>
+  <p>Controls only fire on steps decorated for them. Three changes, in these files: <code>agents/&lt;your folder&gt;/app.py</code>, <code>agents/&lt;your folder&gt;/agent/nodes.py</code> and <code>agents/&lt;your folder&gt;/.env</code>, plus the packages in <code>agents/&lt;your folder&gt;/requirements.txt</code>.</p>
 <pre><code>pip install "agent-control-sdk&gt;=8.5.0" "agent-control-evaluators&gt;=8.5.0" "agent-control-evaluator-galileo&gt;=8.5.0"</code></pre>
 
   <details class="solution" open><summary>Reference answer: the code</summary><div>
-    <h3>1. Initialize once per process (<code>app.py</code>)</h3>
+    <h3>1. Initialize once per process (<code>agents/&lt;your folder&gt;/app.py</code>)</h3>
 <pre><code>_control_ready = False
 
 def init_agent_control() -&gt; None:
@@ -609,7 +661,7 @@ def init_agent_control() -&gt; None:
 def ask(graph, request, user_id=USER_ID):
     init_agent_control()                     # first line of ask()
     ...</code></pre>
-    <h3>2. Decorate the writer's model call (<code>agent/nodes.py</code>)</h3>
+    <h3>2. Decorate the writer's model call (<code>agents/&lt;your folder&gt;/agent/nodes.py</code>)</h3>
 <pre><code>from agent_control import control, ControlViolationError
 
 @control(step_name="write-reply")
@@ -626,7 +678,7 @@ def write(state):
     except ControlViolationError:
         return {"reply": BLOCKED_REPLY}      # never show the blocked text
     ...</code></pre>
-    <h3>3. Environment variables (<code>.env</code>)</h3>
+    <h3>3. Environment variables (<code>agents/&lt;your folder&gt;/.env</code>)</h3>
 <pre><code>AGENT_CONTROL_URL=&lt;agent control url&gt;
 AGENT_CONTROL_API_KEY=&lt;key&gt;
 AGENT_CONTROL_API_KEY_HEADER=Splunk-AO-API-Key
@@ -832,7 +884,7 @@ EOF</code></pre>
     <tr><td>Worksheet</td><td><code>worksheets/design-worksheet.md</code></td></tr>
     <tr><td>Success criteria sheet</td><td><code>worksheets/success-criteria.md</code></td></tr>
     <tr><td>What coaches look for</td><td><code>worksheets/feedback-guide.md</code></td></tr>
-    <tr><td>Your agent</td><td><code>agents/&lt;your folder&gt;/</code></td></tr>
+    <tr><td>Your agent</td><td><code>agents/&lt;your folder&gt;/</code>, with <code>app.py</code>, <code>data.py</code>, <code>questions.txt</code>, <code>requirements.txt</code>, <code>.env</code> and <code>agent/nodes.py</code> (see step 3 for the full map)</td></tr>
     <tr><td>Product docs and SDK</td><td><a href="https://agent-observability-docs.splunk.com" target="_blank" rel="noopener">agent-observability-docs.splunk.com</a></td></tr>
   </table>
 </section>
