@@ -283,7 +283,7 @@ footer{margin-top:40px;color:var(--muted);font-size:13px}
     <tr><td><code>questions.txt</code></td><td><code>agents/&lt;your folder&gt;/questions.txt</code></td><td>Read by <code>run_batch.py</code>. Lines starting with <code>#</code> are skipped. Add your own questions here.</td></tr>
     <tr><td><code>requirements.txt</code></td><td><code>agents/&lt;your folder&gt;/requirements.txt</code></td><td>Installed with <code>pip install -r requirements.txt</code>. Add <code>splunk-ao[langchain]</code> and the pins here after the SDK step.</td></tr>
     <tr><td><code>.env</code></td><td><code>agents/&lt;your folder&gt;/.env</code></td><td>Model gateway, <code>SPLUNK_AO_*</code> and <code>AGENT_CONTROL_*</code> settings. Created from <code>.env.example</code>.</td></tr>
-    <tr><td><code>app.py</code></td><td><code>agents/&lt;your folder&gt;/app.py</code></td><td>Callback, metadata and control init (steps 5, 6, 11).</td></tr>
+    <tr><td><code>app.py</code></td><td><code>agents/&lt;your folder&gt;/app.py</code></td><td>Callback, metadata, the metadata-fields workaround and control init (steps 5, 6, 11).</td></tr>
     <tr><td><code>data.py</code></td><td><code>agents/&lt;your folder&gt;/data.py</code></td><td>Add <code>dealer_id</code> to each shopper (step 6).</td></tr>
     <tr><td><code>failure.py</code></td><td><code>agents/&lt;your folder&gt;/failure.py</code></td><td>Don't edit. <code>FAILURE_MODE</code> switches the planted failure.</td></tr>
     <tr><td><code>run_batch.py</code></td><td><code>agents/&lt;your folder&gt;/run_batch.py</code></td><td>Don't edit. Run it for traffic (step 7).</td></tr>
@@ -488,7 +488,66 @@ def ask(graph, request: str, user_id: str = USER_ID) -&gt; dict:
     <li>Use the five keys: <code>business_unit</code>, <code>dealer_id</code>, <code>shopper_id</code>, <code>model</code>, <code>failure_mode</code>.</li>
     <li><code>dealer_id</code> needs a field on each shopper record in <code>data.py</code>.</li>
   </ol>
-  <div class="done"><b>Done when:</b> a trace in the console shows your metadata.</div>
+  <div class="done"><b>Done when:</b> a trace in the console shows your metadata, and each key appears as its own field you can filter on.</div>
+
+  <h2>Make each key filterable (SDK workaround)</h2>
+  <div class="callout warn"><b class="t">Known SDK issue</b>
+    The SDK writes everything you pass as metadata into <b>one</b> span attribute, <code>splunk_ao.metadata</code>, as a JSON string. In the console that is a single field you can only match with "contains", so filtering or grouping by <code>business_unit</code>, <code>dealer_id</code>, <code>shopper_id</code>, <code>model</code> or <code>failure_mode</code> doesn't work cleanly. Until the product fixes this, wrap one SDK function so each key gets its own attribute.</div>
+  <p><span class="chip">File</span> <code>agents/&lt;your folder&gt;/app.py</code>. Add <code>import json</code> to the imports, paste these two functions above <code>ask()</code>, and call <code>export_metadata_fields()</code> once at module level, before the first trace.</p>
+<pre><code>def _attribute_value(value):
+    """Span attributes hold str, int, float or bool. Anything else becomes JSON text."""
+    if value is None:
+        return ""
+    if isinstance(value, (str, int, float, bool)):
+        return value
+    return json.dumps(value, separators=(",", ":"), sort_keys=True, default=str)
+
+
+def export_metadata_fields() -&gt; None:
+    from splunk_ao.converter import attribute_mapping as mapping
+
+    if getattr(mapping.set_common_attributes, "_exports_metadata_fields", False):
+        return
+    original = mapping.set_common_attributes
+
+    def set_common_attributes(attrs, span, session_id=None):
+        original(attrs, span, session_id)
+        blob = attrs.get("splunk_ao.metadata")
+        if not isinstance(blob, str):
+            return
+        try:
+            parsed = json.loads(blob)
+        except json.JSONDecodeError:
+            return
+        if not isinstance(parsed, dict):
+            return
+        for key, value in parsed.items():
+            attrs[str(key)] = _attribute_value(value)
+        attrs.pop("splunk_ao.metadata", None)
+
+    set_common_attributes._exports_metadata_fields = True
+    mapping.set_common_attributes = set_common_attributes
+
+
+export_metadata_fields()      # once, at import</code></pre>
+  <table>
+    <tr><th>Piece</th><th>What it does and why</th></tr>
+    <tr><td><code>original(attrs, span, session_id)</code></td><td>Lets the SDK build all its own attributes first. The wrapper only adjusts the result.</td></tr>
+    <tr><td><code>attrs.get("splunk_ao.metadata")</code></td><td>Reads the single JSON string that holds all your metadata.</td></tr>
+    <tr><td><code>json.loads(blob)</code></td><td>Turns that string back into a dictionary. If it isn't valid JSON or isn't a dictionary, the wrapper leaves things alone.</td></tr>
+    <tr><td><code>attrs[str(key)] = _attribute_value(value)</code></td><td>Writes one attribute per key. Span attributes only hold strings, numbers and booleans, so anything else becomes JSON text.</td></tr>
+    <tr><td><code>attrs.pop("splunk_ao.metadata", None)</code></td><td>Removes the blob so the keys aren't shown twice.</td></tr>
+    <tr><td><code>_exports_metadata_fields</code> flag</td><td>Makes a second call do nothing, so it can't wrap itself twice.</td></tr>
+    <tr><td><code>mapping.set_common_attributes = ...</code></td><td>Replaces the function on the SDK module. The SDK looks the name up at call time, so the patch applies to every span.</td></tr>
+  </table>
+  <div class="callout"><b class="t">Things to know</b>
+    <ul>
+      <li><b>Only new traces change.</b> Traces sent before the fix keep the single blob. Send fresh traffic, then filter.</li>
+      <li><b>Avoid key names the SDK already uses.</b> A key that matches an SDK attribute name would overwrite it. Plain keys like <code>business_unit</code> are safe; the five keys here were checked and don't collide.</li>
+      <li><b>It wraps an SDK internal.</b> It was written against <code>splunk-ao</code> 0.6.1. Re-check it after an upgrade, and remove it when the product writes one attribute per key itself. Say so at the readout if asked.</li>
+      <li><b>It edits the attributes while the SDK is still building them.</b> There is no supported hook after that point.</li>
+    </ul>
+  </div>
 
   <details class="solution"><summary>Reference answer: the code</summary><div>
     <p>In <code>agents/&lt;your folder&gt;/data.py</code>, give each shopper a dealer:</p>
@@ -567,7 +626,7 @@ FAILURE_MODE=fabricated_citation python run_batch.py 5</code></pre>
       <li>One trace per question, with a tree under it: intake, route, resolve and write steps, the model calls inside them, and a tool call on the action path.</li>
       <li>Your five metadata keys on the trace, and the <code>auto-retail</code> tag.</li>
       <li>On a failure run, the writer's input contains the <code>ARTICLES</code> block with <code>BR-999</code> and the <code>INVENTORY</code> record that contradicts it. This is what the judge compares.</li>
-      <li>Filter on <code>failure_mode</code> to split clean from failure traffic.</li>
+      <li>Filter on <code>failure_mode</code> to split clean from failure traffic. This only works as a separate field if you applied the metadata workaround in step 6, and only on traces sent after it.</li>
     </ul>
     <p>Warnings such as <code>LangChainPendingDeprecationWarning</code> on start-up are harmless.</p>
   </div></details>
@@ -983,6 +1042,7 @@ EOF</code></pre>
     <tr><td><code>403 key_model_access_denied</code></td><td>The key can't use that model</td><td>Set <code>OPENAI_MODEL</code> to an allowed model</td></tr>
     <tr><td><code>NameError: data</code> in <code>ask()</code></td><td>Missing <code>import data</code></td><td>Add it at the top of <code>app.py</code></td></tr>
     <tr><td>Syntax error in <code>app.py</code> after adding the callback</td><td>Merged statements or lines outside <code>ask()</code></td><td>One statement per line, all indented inside <code>ask()</code></td></tr>
+    <tr><td>Metadata shows as one field and I can't filter on <code>failure_mode</code> or <code>dealer_id</code></td><td>Known SDK issue: all metadata goes into the single <code>splunk_ao.metadata</code> attribute</td><td>Apply the workaround in step 6, then send fresh traffic. Old traces keep the single field</td></tr>
     <tr><td>No trace in the console</td><td>Wrong project or stream name, bad key, or the process exited before the flush</td><td>Check the <code>SPLUNK_AO_*</code> values; keep <code>flush_on_chain_end=True</code></td></tr>
     <tr><td>Evaluator shows a model-integration error</td><td>The org has no model integration for LLM judges</td><td>Tell the facilitator; it's the org, not you</td></tr>
     <tr><td>Judge doesn't flag the failure</td><td>It scored a span without the inventory record, or the failure question wasn't sent</td><td>Check which span it scores; run the targeted question</td></tr>
