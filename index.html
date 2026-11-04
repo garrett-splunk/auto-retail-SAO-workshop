@@ -5,103 +5,154 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Auto-Retail Challenge Refresher</title>
 <meta name="description" content="Step-by-step refresher for the Auto-Retail scenario of the Splunk Agent Observability Customer Challenge, with reference answers.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
 <style>
 :root{
-  --bg:#ffffff; --panel:#f6f7f9; --text:#1f2430; --muted:#5d6676; --line:#dfe3ea;
-  --accent:#0b6bcb; --accent-soft:#e6f0fb; --code-bg:#0f172a; --code-text:#e6edf7;
-  --info-bg:#e6f0fb; --info-line:#0b6bcb; --warn-bg:#fff4e0; --warn-line:#c77700;
-  --ok-bg:#e8f6ec; --ok-line:#1f8a4c; --bad-bg:#fdeaea; --bad-line:#c0392b;
+  --color-accent:#FF007F; --color-accent-2:#FF9000; --color-accent-dark:#D4006B; --color-accent-text:#BD0D5F;
+  --color-ink:#0C1724; --color-ink-muted:#585B61; --color-paper:#FFFFFF; --color-surface:#F2F5FA; --color-surface-alt:#E9EEF4;
+  --color-border:#E1E5EC; --color-border-strong:#C7CDD8; --code-bg:#F5F5F5; --code-header-bg:#F2F2F2; --code-ink:#0C1724;
+  --canvas-from:#E9EEF4; --canvas-to:#F2F5FA;
+  --info-bg:#FFF0F7; --info-line:#FF007F; --warn-bg:#FFF5E6; --warn-line:#FF9000; --ok-bg:#E9F7EF; --ok-line:#1F8A4C; --bad-bg:#FDECEC; --bad-line:#D93025;
+  --gradient-accent:linear-gradient(95deg,var(--color-accent) 10%,var(--color-accent-2) 90%);
+  --font-body:'Inter',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,'SF Mono',Menlo,Monaco,Consolas,monospace;
+  --content-max:880px; --radius-sm:6px; --radius-md:8px; --radius-lg:12px; --header-h:60px;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#10141c; --panel:#171c27; --text:#e6e9ef; --muted:#9aa4b5; --line:#2a3242;
-    --accent:#5aa9ff; --accent-soft:#16263d; --code-bg:#0a0e16; --code-text:#e6edf7;
-    --info-bg:#14243a; --info-line:#5aa9ff; --warn-bg:#2b2113; --warn-line:#e0a040;
-    --ok-bg:#12281b; --ok-line:#4cc27b; --bad-bg:#2d1717; --bad-line:#e5705f;
+    --color-ink:#F4F1EA; --color-ink-muted:#9CA3AF; --color-paper:#0B1118; --color-surface:#0B1118; --color-surface-alt:#04070B;
+    --color-border:#1F2C44; --color-border-strong:#2A3A56; --code-bg:#0A1322; --code-header-bg:#131E33; --code-ink:#E6EDF7;
+    --canvas-from:#04070B; --canvas-to:#0B1118; --color-accent-text:#FF7DBA;
+    --info-bg:#2A0F1E; --warn-bg:#2B1D0B; --ok-bg:#0F2418; --bad-bg:#2B1212; --ok-line:#4CC27B; --bad-line:#FF6B5E;
   }
 }
 :root[data-theme="dark"]{
-  --bg:#10141c; --panel:#171c27; --text:#e6e9ef; --muted:#9aa4b5; --line:#2a3242;
-  --accent:#5aa9ff; --accent-soft:#16263d; --code-bg:#0a0e16; --code-text:#e6edf7;
-  --info-bg:#14243a; --info-line:#5aa9ff; --warn-bg:#2b2113; --warn-line:#e0a040;
-  --ok-bg:#12281b; --ok-line:#4cc27b; --bad-bg:#2d1717; --bad-line:#e5705f;
+  --color-ink:#F4F1EA; --color-ink-muted:#9CA3AF; --color-paper:#0B1118; --color-surface:#0B1118; --color-surface-alt:#04070B;
+  --color-border:#1F2C44; --color-border-strong:#2A3A56; --code-bg:#0A1322; --code-header-bg:#131E33; --code-ink:#E6EDF7;
+  --canvas-from:#04070B; --canvas-to:#0B1118; --color-accent-text:#FF7DBA;
+  --info-bg:#2A0F1E; --warn-bg:#2B1D0B; --ok-bg:#0F2418; --bad-bg:#2B1212; --ok-line:#4CC27B; --bad-line:#FF6B5E;
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-a{color:var(--accent)}
-.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--bg);border-bottom:1px solid var(--line)}
-.topbar .name{font-weight:650;letter-spacing:.2px}
-.topbar .tag{font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:2px 10px}
+body{margin:0;color:var(--color-ink);background:linear-gradient(95deg,var(--canvas-from) 10%,var(--canvas-to) 90%) fixed;
+  font:16px/1.65 var(--font-body);-webkit-font-smoothing:antialiased}
+a{color:var(--color-accent-text);text-underline-offset:2px}
+a:hover{color:var(--color-accent)}
+:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px;border-radius:4px}
+
+/* header */
+.site-header{position:sticky;top:0;z-index:50;height:var(--header-h);display:flex;align-items:center;gap:14px;padding:0 20px;
+  background:var(--color-paper);border-bottom:1px solid var(--color-border)}
+.site-header::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--gradient-accent)}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--color-ink);font-weight:700;letter-spacing:-.01em}
+.brand__mark{width:22px;height:22px;border-radius:6px;background:var(--gradient-accent);display:inline-block}
+.brand__name{font-size:17px}
+.pill{font-size:12px;font-weight:500;color:var(--color-ink-muted);border:1px solid var(--color-border-strong);border-radius:999px;padding:2px 10px;white-space:nowrap}
 .spacer{flex:1}
-.btn{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:8px;padding:6px 12px;font:inherit;font-size:14px;cursor:pointer}
-.btn:hover{border-color:var(--accent)}
+.icon-btn{display:inline-flex;align-items:center;justify-content:center;min-width:38px;height:38px;padding:0 10px;border:1px solid var(--color-border);
+  background:var(--color-surface);color:var(--color-ink);border-radius:var(--radius-md);font:500 14px var(--font-body);cursor:pointer;transition:border-color .15s}
+.icon-btn:hover{border-color:var(--color-accent)}
 #menu-btn{display:none}
-.layout{display:grid;grid-template-columns:300px minmax(0,1fr);max-width:1280px;margin:0 auto}
-nav#side{position:sticky;top:54px;align-self:start;height:calc(100vh - 54px);overflow:auto;padding:16px 8px 32px 16px;border-right:1px solid var(--line)}
-nav#side .grp{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:18px 0 6px 8px}
-nav#side a{display:block;padding:5px 10px;border-radius:6px;color:var(--text);text-decoration:none;font-size:14.5px;line-height:1.35}
-nav#side a:hover{background:var(--panel)}
-nav#side a.active{background:var(--accent-soft);color:var(--accent);font-weight:600}
-main{padding:28px 32px 80px;max-width:900px;min-width:0}
+
+/* layout */
+.layout{display:grid;grid-template-columns:300px minmax(0,1fr);max-width:1320px;margin:0 auto;gap:0}
+nav#side{position:sticky;top:var(--header-h);align-self:start;height:calc(100vh - var(--header-h));overflow:auto;padding:22px 14px 40px 20px}
+nav#side .grp{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--color-ink-muted);margin:20px 0 6px 12px}
+nav#side .grp:first-child{margin-top:0}
+nav#side a{position:relative;display:block;padding:6px 12px;border-radius:var(--radius-sm);color:var(--color-ink);text-decoration:none;font-size:14.5px;line-height:1.4;transition:background .15s}
+nav#side a:hover{background:var(--color-surface-alt)}
+nav#side a.active{background:var(--color-paper);color:var(--color-accent-text);font-weight:600;box-shadow:inset 0 0 0 1px var(--color-border)}
+nav#side a.active::before{content:"";position:absolute;left:0;top:6px;bottom:6px;width:3px;border-radius:3px;background:var(--gradient-accent)}
+main{min-width:0;padding:28px 28px 80px}
+.article{max-width:var(--content-max);margin:0 auto;background:var(--color-paper);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:34px 40px 40px}
 section{display:none}
 section.show{display:block}
-h1{font-size:30px;line-height:1.2;margin:0 0 6px}
-h2{font-size:21px;margin:34px 0 8px;padding-top:6px;border-top:1px solid var(--line)}
-h3{font-size:17px;margin:22px 0 6px}
-.lead{color:var(--muted);margin:0 0 18px}
-p,li{max-width:74ch}
-code{font:13.5px/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
-pre{position:relative;margin:12px 0;background:var(--code-bg);color:var(--code-text);border-radius:8px;padding:14px 16px;overflow:auto;font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-pre code{background:none;border:0;padding:0;color:inherit;font:inherit}
-pre .cp{position:absolute;top:6px;right:6px;border:1px solid #33405a;background:#1a2334;color:#c8d3e6;border-radius:6px;font:12px system-ui;padding:3px 8px;cursor:pointer}
-pre .cp:hover{border-color:#5aa9ff}
-.callout{margin:16px 0;padding:12px 14px;border-left:4px solid var(--info-line);background:var(--info-bg);border-radius:0 8px 8px 0}
-.callout.warn{border-color:var(--warn-line);background:var(--warn-bg)}
-.callout.ok{border-color:var(--ok-line);background:var(--ok-bg)}
-.callout.bad{border-color:var(--bad-line);background:var(--bad-bg)}
-.callout b.t{display:block;margin-bottom:2px}
+
+/* type */
+h1{font-size:34px;line-height:1.15;letter-spacing:-.02em;margin:0 0 10px;font-weight:700}
+h1::after{content:"";display:block;width:64px;height:4px;border-radius:4px;background:var(--gradient-accent);margin-top:14px}
+h2{font-size:22px;line-height:1.3;letter-spacing:-.01em;margin:40px 0 10px;padding-top:22px;border-top:1px solid var(--color-border);font-weight:700}
+h3{font-size:17px;margin:26px 0 6px;font-weight:600}
+.lead{font-size:17.5px;color:var(--color-ink-muted);margin:16px 0 20px}
+p,li{max-width:76ch}
+ul,ol{padding-left:22px}
+code{font:13.5px/1.45 var(--font-mono);background:var(--color-surface-alt);border:1px solid var(--color-border);border-radius:5px;padding:1px 6px}
+.chip{display:inline-block;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--color-accent-text);
+  border:1px solid var(--color-accent-text);border-radius:999px;padding:1px 9px;margin-right:6px}
+
+/* code blocks with a header bar */
+.code{margin:14px 0;border:1px solid var(--color-border);border-radius:var(--radius-md);overflow:hidden;background:var(--code-bg)}
+.code__head{display:flex;align-items:center;justify-content:space-between;padding:6px 8px 6px 14px;background:var(--code-header-bg);border-bottom:1px solid var(--color-border)}
+.code__lang{font:600 11.5px var(--font-mono);text-transform:lowercase;color:var(--color-ink-muted)}
+.code__copy{border:1px solid var(--color-border-strong);background:transparent;color:var(--color-ink);border-radius:var(--radius-sm);font:500 12px var(--font-body);padding:3px 10px;cursor:pointer}
+.code__copy:hover{border-color:var(--color-accent);color:var(--color-accent-text)}
+.code pre{margin:0;padding:14px 16px;overflow:auto;color:var(--code-ink);font:13px/1.55 var(--font-mono)}
+.code pre code{background:none;border:0;padding:0;color:inherit;font:inherit}
+
+/* callouts */
+.callout{margin:18px 0;padding:14px 16px;border:1px solid var(--color-border);border-left:4px solid var(--info-line);background:var(--info-bg);border-radius:var(--radius-md)}
+.callout.warn{border-left-color:var(--warn-line);background:var(--warn-bg)}
+.callout.ok{border-left-color:var(--ok-line);background:var(--ok-bg)}
+.callout.bad{border-left-color:var(--bad-line);background:var(--bad-bg)}
+.callout b.t{display:block;margin-bottom:3px;font-weight:700}
 .callout :last-child{margin-bottom:0}
-.done{margin:16px 0;padding:10px 14px;border:1px dashed var(--ok-line);border-radius:8px;background:var(--ok-bg)}
-details.solution{margin:16px 0;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
-details.solution>summary{cursor:pointer;padding:10px 14px;font-weight:600;color:var(--accent);list-style:none}
-details.solution>summary::before{content:"\25B8  "}
-details.solution[open]>summary::before{content:"\25BE  "}
-details.solution>div{padding:2px 16px 14px;border-top:1px solid var(--line)}
-table{border-collapse:collapse;width:100%;margin:12px 0;font-size:14.5px;display:block;overflow-x:auto}
-th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
-th{background:var(--panel);white-space:nowrap}
-.pager{display:flex;justify-content:space-between;gap:12px;margin-top:44px;padding-top:18px;border-top:1px solid var(--line)}
-.pager a{flex:1;max-width:48%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;text-decoration:none;color:var(--text)}
-.pager a:hover{border-color:var(--accent)}
-.pager small{display:block;color:var(--muted);font-size:12px}
-.pager .next{text-align:right;margin-left:auto}
+.done{margin:18px 0;padding:11px 16px;border:1px dashed var(--ok-line);border-radius:var(--radius-md);background:var(--ok-bg)}
+
+/* expandable reference answers */
+details.solution{margin:20px 0;border:1px solid var(--color-border-strong);border-radius:var(--radius-lg);background:var(--color-surface)}
+details.solution>summary{cursor:pointer;padding:12px 16px;font-weight:600;color:var(--color-accent-text);list-style:none;display:flex;align-items:center;gap:8px}
+details.solution>summary::-webkit-details-marker{display:none}
+details.solution>summary::before{content:"";width:8px;height:8px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-45deg);transition:transform .15s}
+details.solution[open]>summary::before{transform:rotate(45deg)}
+details.solution>div{padding:4px 18px 16px;border-top:1px solid var(--color-border);background:var(--color-paper);border-radius:0 0 var(--radius-lg) var(--radius-lg)}
+
+/* tables */
+table{border-collapse:separate;border-spacing:0;width:100%;margin:14px 0;font-size:14.5px;display:block;overflow-x:auto;border:1px solid var(--color-border);border-radius:var(--radius-md)}
+th,td{border-bottom:1px solid var(--color-border);border-right:1px solid var(--color-border);padding:9px 12px;text-align:left;vertical-align:top}
+th:last-child,td:last-child{border-right:0}
+tr:last-child td{border-bottom:0}
+th{background:var(--color-surface-alt);font-weight:600;white-space:nowrap}
+
+/* numbered steps */
 .steps{counter-reset:s;list-style:none;padding:0}
-.steps>li{counter-increment:s;position:relative;padding-left:40px;margin:14px 0}
-.steps>li::before{content:counter(s);position:absolute;left:0;top:0;width:28px;height:28px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-weight:700;display:flex;align-items:center;justify-content:center;font-size:14px}
-.chip{display:inline-block;font-size:12px;border:1px solid var(--line);border-radius:999px;padding:1px 9px;margin-right:4px;color:var(--muted)}
-footer{margin-top:40px;color:var(--muted);font-size:13px}
-@media (max-width:860px){
+.steps>li{counter-increment:s;position:relative;padding-left:44px;margin:16px 0}
+.steps>li::before{content:counter(s);position:absolute;left:0;top:0;width:30px;height:30px;border-radius:50%;background:var(--gradient-accent);
+  color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:14px}
+
+/* pager */
+.pager{display:flex;justify-content:space-between;gap:14px;margin-top:48px;padding-top:22px;border-top:1px solid var(--color-border)}
+.pager a{flex:1;max-width:48%;padding:14px 16px;border:1px solid var(--color-border-strong);border-radius:var(--radius-md);text-decoration:none;color:var(--color-ink);
+  background:var(--color-paper);font-weight:600;transition:border-color .15s,transform .15s}
+.pager a:hover{border-color:var(--color-accent);transform:translateY(-1px)}
+.pager small{display:block;color:var(--color-ink-muted);font-size:11.5px;font-weight:500;text-transform:uppercase;letter-spacing:.07em}
+.pager .next{text-align:right;margin-left:auto}
+footer{max-width:var(--content-max);margin:22px auto 0;color:var(--color-ink-muted);font-size:13px;padding:0 8px}
+
+@media (max-width:900px){
   .layout{grid-template-columns:1fr}
-  nav#side{position:fixed;inset:54px 0 0 0;height:auto;background:var(--bg);z-index:15;display:none;border:0}
+  nav#side{position:fixed;inset:var(--header-h) 0 0 0;height:auto;background:var(--color-paper);z-index:45;display:none;padding:18px}
   nav#side.open{display:block}
-  #menu-btn{display:inline-block}
-  main{padding:20px 16px 70px}
-  .topbar .tag{display:none}
+  #menu-btn{display:inline-flex}
+  .pill{display:none}
+  main{padding:14px 12px 70px}
+  .article{padding:22px 18px 28px;border-radius:var(--radius-md)}
+  h1{font-size:28px}
 }
 </style>
 </head>
 <body>
-<div class="topbar">
-  <button class="btn" id="menu-btn" aria-label="Open contents">Contents</button>
-  <span class="name">Auto-Retail Challenge Refresher</span>
-  <span class="tag">Unofficial study guide</span>
+<header class="site-header">
+  <button class="icon-btn" id="menu-btn" aria-label="Open contents">Menu</button>
+  <a class="brand" href="#overview"><span class="brand__mark" aria-hidden="true"></span><span class="brand__name">Auto-Retail Challenge Refresher</span></a>
+  <span class="pill">Unofficial study guide</span>
   <span class="spacer"></span>
-  <button class="btn" id="theme-btn" aria-label="Toggle light and dark">Theme</button>
-</div>
+  <button class="icon-btn" id="theme-btn" aria-label="Toggle light and dark theme"><span id="theme-label">Dark</span></button>
+</header>
 <div class="layout">
   <nav id="side" aria-label="Contents"></nav>
-  <main id="main">
+  <main id="main"><div class="article">
 
 <!-- ===================================================== OVERVIEW -->
 <section id="overview" data-group="Start" data-title="Overview">
@@ -159,7 +210,7 @@ footer{margin-top:40px;color:var(--muted);font-size:13px}
     <tr><td>Agent stream</td><td>The bucket of traces inside a project. Some console screens still say "log stream". Same thing.</td></tr>
     <tr><td>Trace / span</td><td>One shopper question is one trace. Steps, model calls and tool calls are spans inside it.</td></tr>
     <tr><td>Evaluator</td><td>Scores a trace or span. Luna evaluators run on Splunk-hosted small models. LLM-judge evaluators need a model integration on the org.</td></tr>
-    <tr><td>Control</td><td>A runtime rule (Agent Control) that can allow, steer or deny what a step produces before it goes on.</td></tr>
+    <tr><td>Control</td><td>A runtime rule (Agent Control) that can allow, steer or deny what a step produces before it goes on. <b>An LLM-as-a-judge evaluator can't be used as a guardrail yet</b>; see the note in step 11.</td></tr>
     <tr><td>Planted failure</td><td>A switch (<code>FAILURE_MODE</code>) that makes the agent misbehave the way the customer fears, so there is something to catch.</td></tr>
   </table>
 </section>
@@ -724,6 +775,8 @@ FAILURE_MODE=fabricated_citation python run_batch.py 5</code></pre>
   <p class="lead">A custom LLM-as-a-judge evaluator that checks every claimed feature against the vehicle's inventory record. This is the win condition for the scenario.</p>
   <div class="callout warn"><b class="t">Before you start</b>
     LLM-judge evaluators need a <b>model integration on the org</b>. If the model picker is empty or errors, that's the org, not you. Ask the facilitator.</div>
+  <div class="callout warn"><b class="t">An LLM-as-a-judge evaluator is not a guardrail today</b>
+    It scores traces <b>after</b> they are sent, so it can flag a bad reply and feed an alert, but it can't block or rewrite the reply before the shopper sees it. Using an LLM-as-a-judge evaluator as a guardrail (a runtime control) isn't available today. It is coming soon and is currently in staging. Until it ships, the "stop it" half of this scenario uses a rule-based control (step 11), and the judge does the "catch it and explain why" half.</div>
   <div class="callout"><b class="t">Prefer an out-of-the-box evaluator?</b>
     See <a href="#builtin">9b</a> for built-in options (Correctness, Context Adherence, PII, Prompt Injection) and what each can and can't catch for this scenario.</div>
   <ol class="steps">
@@ -935,6 +988,9 @@ FAILURE_MODE=fabricated_citation python app.py "Does the Meridian EX have hands-
   <p class="lead">An alert tells someone. A control stops the bad reply before the shopper sees it. It has a console half and a code half.</p>
   <p>Docs: <a href="https://agent-observability-docs.splunk.com/concepts/agent-control/overview.md" target="_blank" rel="noopener">Agent Control</a>, then Create a control, Initialize and configure, Monitor a control.</p>
 
+  <div class="callout warn"><b class="t">Why the control uses a rule and not your judge</b>
+    Using an <b>LLM-as-a-judge evaluator as a guardrail is not available today</b>. It is coming soon and is currently in staging. So the control here matches on a fixed value (<code>BR-999</code>) with a list evaluator, and the custom judge from step 9 is used for scoring, rationale and the alert. When LLM-as-a-judge guardrails ship, the same grounded-against-inventory prompt could stop the reply directly, with no hard-coded <code>BR-999</code> match. Check the product docs for the current status before you promise that to a customer.</div>
+
   <h2>Half 1: create the control (console)</h2>
   <ol class="steps">
     <li>Main menu, <b>Controls</b>, <b>Create new control</b>, choose the list evaluator.</li>
@@ -1037,6 +1093,7 @@ EOF</code></pre>
     <tr><td>Blocks the true answer too</td><td>The value included <code>hands-free</code>, which the correct reply also says. Match on <code>BR-999</code> only.</td></tr>
     <tr><td><code>401 Unauthorized</code> on <code>/api/v1/evaluation</code>, every question crashes</td><td>Setting <code>AGENT_CONTROL_RUNTIME_TOKEN_HEADER=X-Agent-Control-Runtime-Token</code>, as the docs' example does, caused this on the workshop server. Leave it unset (default <code>Authorization</code>).</td></tr>
     <tr><td>Edit to the control didn't change anything</td><td>Attaching a control clones it. Edit the clone on the stream. The SDK refreshes policies about every 60 seconds.</td></tr>
+    <tr><td>I can't pick my custom LLM judge as the control's evaluator</td><td>LLM-as-a-judge isn't available as a guardrail today (coming soon, in staging)</td><td>Use a rule-based evaluator such as the list evaluator on <code>BR-999</code>, and keep the judge as an evaluator for scoring and alerts</td></tr>
     <tr><td>Two similar controls loaded</td><td>Re-adding made a clone. Remove the one you don't need so edits aren't made twice.</td></tr>
   </table>
   <div class="callout warn"><b class="t">It fails closed</b>
@@ -1092,7 +1149,7 @@ EOF</code></pre>
       <tr><th>#</th><th>Criterion</th><th>How the demo proves it</th><th>Row</th></tr>
       <tr><td>1</td><td>Evaluation owner: "We've seen these functionalities with other products." So show something new: a judge in his own definition of a bad answer catches the brochure-vs-inventory failure automatically.</td><td>Screen 1: the flagged Meridian EX trace, reply claims hands-free and cites <code>BR-999</code>, judge scores <code>false</code></td><td>1</td></tr>
       <tr><td>2</td><td>"Is this calibrated?" Every flag comes with a written reason, and clean traffic stays unflagged, so they can compare with their human labels.</td><td>Screen 2: the rationale, and the <code>failure_mode</code> filter splitting clean from failure runs</td><td>2</td></tr>
-      <tr><td>3</td><td>Our addition, not a customer quote: the bad reply doesn't reach the shopper.</td><td>The same question returns the handoff reply with the control on, and the true answer still passes</td><td>3</td></tr>
+      <tr><td>3</td><td>Our addition, not a customer quote: the bad reply doesn't reach the shopper. (Today this uses a rule-based control; an LLM judge can't be a guardrail yet.)</td><td>The same question returns the handoff reply with the control on, and the true answer still passes</td><td>3</td></tr>
       <tr><td>4</td><td>Our addition, not a customer quote: someone is told without watching the console. Keep only if tied to the control row.</td><td>The alert on the judge's <code>false</code> score, by email or Slack</td><td>3</td></tr>
       <tr><td>5</td><td>Buyer (paraphrase): tokenomics and one governance view across business units</td><td>Screen 3: cost and tokens per trace, filtered by <code>business_unit</code>; tokenomics for provider, model and user only</td><td>4</td></tr>
     </table>
@@ -1129,6 +1186,7 @@ EOF</code></pre>
     <ul>
       <li><b>Is the judge calibrated?</b> Not yet, and we don't claim it is. It uses your definition, shows a rationale on every score, and we'd compare with your human labels.</li>
       <li><b>Why a custom judge, not a built-in evaluator?</b> The failure is customer-specific: a feature missing from this vehicle's inventory record. A built-in evaluator doesn't know your inventory.</li>
+      <li><b>Why isn't the judge the thing that blocks the reply?</b> LLM-as-a-judge isn't available as a guardrail today. It's coming soon and is in staging. Today it scores and explains after the fact, and the control is a rule on the planted brochure ID. We'd move the grounded-against-inventory check into a guardrail once that ships.</li>
       <li><b>Why a control and an alert?</b> The control stops this specific failure. The alert tells a person it happened.</li>
       <li><b>Whose model scores this?</b> The workshop's model through a gateway. In production you'd choose.</li>
       <li><b>What if the control service is down?</b> The SDK fails closed and blocks the reply, which is safe but means every question fails. Decide whether that's what you want.</li>
@@ -1249,6 +1307,7 @@ python ui.py        # http://127.0.0.1:7860</code></pre>
 </section>
 
   <div class="pager" id="pager"></div>
+  </div>
   <footer>
     Unofficial study guide for the Splunk Agent Observability Customer Challenge, Auto-Retail scenario. Product names belong to their owners. Check the
     <a href="https://agent-observability-docs.splunk.com" target="_blank" rel="noopener">official docs</a> for current behavior.
@@ -1275,17 +1334,29 @@ python ui.py        # http://127.0.0.1:7860</code></pre>
     side.appendChild(a);
   });
 
-  // Copy buttons on every code block
+  // Code blocks: a header bar with a language label and a Copy button
+  function langOf(text){
+    if (/^\s*(import |from \S+ import |def |class |@control|export_metadata|config = |callback = |RECORDS|_control_ready)/m.test(text) || /\bdef \w+\(/.test(text)) return "python";
+    if (/^\s*(cd |pip |python |python3 |source |env |cp |chmod |echo |for |FAILURE_MODE=|export |unset |curl |\/build|printf |ls )/m.test(text)) return "bash";
+    if (/^[A-Z_]+=/m.test(text)) return "env";
+    return "text";
+  }
   document.querySelectorAll("pre").forEach(function(pre){
-    var b = document.createElement("button"); b.className = "cp"; b.type = "button"; b.textContent = "Copy";
+    var code = pre.querySelector("code");
+    var text = (code || pre).innerText;
+    var wrap = document.createElement("div"); wrap.className = "code";
+    var head = document.createElement("div"); head.className = "code__head";
+    var lang = document.createElement("span"); lang.className = "code__lang"; lang.textContent = langOf(text);
+    var b = document.createElement("button"); b.className = "code__copy"; b.type = "button"; b.textContent = "Copy";
     b.addEventListener("click", function(){
-      var code = pre.querySelector("code");
-      var text = (code || pre).innerText;
+      var t = (pre.querySelector("code") || pre).innerText;
       var done = function(){ b.textContent = "Copied"; setTimeout(function(){ b.textContent = "Copy"; }, 1400); };
-      if (navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(done, function(){ b.textContent = "Select and copy"; }); }
+      if (navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(done, function(){ b.textContent = "Select and copy"; }); }
       else { b.textContent = "Select and copy"; }
     });
-    pre.appendChild(b);
+    head.appendChild(lang); head.appendChild(b);
+    pre.parentNode.insertBefore(wrap, pre);
+    wrap.appendChild(head); wrap.appendChild(pre);
   });
 
   function show(){
@@ -1315,13 +1386,19 @@ python ui.py        # http://127.0.0.1:7860</code></pre>
 
   // Theme toggle, remembered if storage is available
   var root = document.documentElement;
-  try { var saved = localStorage.getItem("refresher-theme"); if (saved) root.setAttribute("data-theme", saved); } catch(e){}
-  document.getElementById("theme-btn").addEventListener("click", function(){
+  var label = document.getElementById("theme-label");
+  function isDark(){
     var cur = root.getAttribute("data-theme");
-    var dark = cur ? cur === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
-    var next = dark ? "light" : "dark";
+    return cur ? cur === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+  }
+  function paintLabel(){ label.textContent = isDark() ? "Light" : "Dark"; }
+  try { var saved = localStorage.getItem("refresher-theme"); if (saved) root.setAttribute("data-theme", saved); } catch(e){}
+  paintLabel();
+  document.getElementById("theme-btn").addEventListener("click", function(){
+    var next = isDark() ? "light" : "dark";
     root.setAttribute("data-theme", next);
     try { localStorage.setItem("refresher-theme", next); } catch(e){}
+    paintLabel();
   });
 })();
 </script>
