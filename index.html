@@ -91,6 +91,14 @@ code{font:13.5px/1.45 var(--font-mono);background:var(--color-surface-alt);borde
 .code pre{margin:0;padding:14px 16px;overflow:auto;color:var(--code-ink);font:13px/1.55 var(--font-mono)}
 .code pre code{background:none;border:0;padding:0;color:inherit;font:inherit}
 
+/* official docs box */
+.docs{margin:16px 0 20px;padding:12px 16px 12px 18px;border:1px solid var(--color-border);border-left:4px solid var(--color-accent-2);border-radius:var(--radius-md);background:var(--color-surface)}
+.docs b{display:block;font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--color-ink-muted);margin-bottom:4px}
+.docs ul{margin:0;padding-left:18px;columns:1}
+.docs li{margin:2px 0;font-size:14.5px}
+.ref h3{margin-top:22px}
+.ref ul{margin-top:4px}
+
 /* callouts */
 .callout{margin:18px 0;padding:14px 16px;border:1px solid var(--color-border);border-left:4px solid var(--info-line);background:var(--info-bg);border-radius:var(--radius-md)}
 .callout.warn{border-left-color:var(--warn-line);background:var(--warn-bg)}
@@ -158,6 +166,7 @@ footer{max-width:var(--content-max);margin:22px auto 0;color:var(--color-ink-mut
 <section id="overview" data-group="Start" data-title="Overview">
   <h1>Auto-Retail Challenge Refresher</h1>
   <p class="lead">A walkthrough of every step of the Auto-Retail scenario in the Splunk Agent Observability (SAO) Customer Challenge, with reference answers to check your work.</p>
+  <div class="docs"><b>Official docs</b><ul><li><a href="https://agent-observability-docs.splunk.com/getting-started/quickstart" target="_blank" rel="noopener">Log Your First Trace (quickstart)</a></li><li><a href="https://agent-observability-docs.splunk.com/concepts/projects" target="_blank" rel="noopener">Projects</a></li><li><a href="https://agent-observability-docs.splunk.com/concepts/evaluators/overview" target="_blank" rel="noopener">Evaluators Overview</a></li><li><a href="https://agent-observability-docs.splunk.com/concepts/agent-control/overview" target="_blank" rel="noopener">Agent Control overview</a></li></ul></div>
 
   <div class="callout">
     <b class="t">How to use this page</b>
@@ -464,6 +473,7 @@ python app.py "Does the Meridian EX have hands-free highway driving?"</code></pr
 <section id="setup" data-group="Instrument" data-title="4. Install the SDK and set variables">
   <h1>4. Install the SDK and set variables</h1>
   <p class="lead">Before any code, give the agent the SDK and tell it where to send traces.</p>
+  <div class="docs"><b>Official docs</b><ul><li><a href="https://agent-observability-docs.splunk.com/getting-started/quickstart" target="_blank" rel="noopener">Log Your First Trace (quickstart)</a></li><li><a href="https://agent-observability-docs.splunk.com/sdk-api/logging/logging-basics" target="_blank" rel="noopener">Instrumentation (logging basics)</a></li><li><a href="https://agent-observability-docs.splunk.com/concepts/projects" target="_blank" rel="noopener">Projects</a></li></ul></div>
   <p><span class="chip">Files</span> <code>agents/&lt;your folder&gt;/.env</code>, <code>agents/&lt;your folder&gt;/requirements.txt</code></p>
 
   <h2>Find your credentials</h2>
@@ -562,6 +572,7 @@ splunk-ao[langchain]</code></pre>
 <section id="callback" data-group="Instrument" data-title="5. Add the callback">
   <h1>5. Add the callback</h1>
   <p class="lead">One object, attached to the graph call, inside <code>ask()</code> in <code>app.py</code> and nowhere else.</p>
+  <div class="docs"><b>Official docs</b><ul><li><a href="https://agent-observability-docs.splunk.com/sdk-api/third-party-integrations/langchain/langchain" target="_blank" rel="noopener">LangChain and LangGraph integration (callback, metadata)</a></li><li><a href="https://agent-observability-docs.splunk.com/sdk-api/logging/logging-basics" target="_blank" rel="noopener">Instrumentation (logging basics)</a></li><li><a href="https://agent-observability-docs.splunk.com/sdk-api/logging/splunk-ao-logger" target="_blank" rel="noopener">Splunk Agent Observability Logger (SplunkAOLogger)</a></li></ul></div>
   <p><span class="chip">File</span> <code>agents/&lt;your folder&gt;/app.py</code></p>
   <p>Docs: <a href="https://agent-observability-docs.splunk.com/sdk-api/third-party-integrations/langchain/langchain" target="_blank" rel="noopener">LangChain integration</a>. Work from the docs first; the answer is below.</p>
   <ol class="steps">
@@ -596,6 +607,7 @@ def ask(graph, request: str, user_id: str = USER_ID) -&gt; dict:
 <section id="metadata" data-group="Instrument" data-title="6. Add metadata">
   <h1>6. Add metadata</h1>
   <p class="lead">Tag every trace with what the customer wants to filter by. The keys come from your worksheet.</p>
+  <div class="docs"><b>Official docs</b><ul><li><a href="https://agent-observability-docs.splunk.com/sdk-api/third-party-integrations/langchain/langchain" target="_blank" rel="noopener">LangChain and LangGraph integration (callback, metadata)</a></li><li><a href="https://agent-observability-docs.splunk.com/sdk-api/logging/logging-basics" target="_blank" rel="noopener">Instrumentation (logging basics)</a></li></ul></div>
   <p><span class="chip">Files</span> <code>agents/&lt;your folder&gt;/app.py</code> (the metadata), <code>agents/&lt;your folder&gt;/data.py</code> (the <code>dealer_id</code> field)</p>
   <ol class="steps">
     <li>Add a <code>metadata</code> dictionary to the same <code>RunnableConfig</code>.</li>
@@ -721,6 +733,7 @@ export_metadata_fields()      # once, at import</code></pre>
 <section id="traffic" data-group="Instrument" data-title="7. Send traffic and find the trace">
   <h1>7. Send traffic and find the trace</h1>
   <p class="lead">Run one question, find the trace, then send a batch so there is something to look at.</p>
+  <div class="docs"><b>Official docs</b><ul><li><a href="https://agent-observability-docs.splunk.com/getting-started/quickstart" target="_blank" rel="noopener">Log Your First Trace (quickstart)</a></li><li><a href="https://agent-observability-docs.splunk.com/sdk-api/logging/logging-basics" target="_blank" rel="noopener">Instrumentation (logging basics)</a></li></ul></div>
   <p><span class="chip">Files</span> <code>agents/&lt;your folder&gt;/run_batch.py</code> replays <code>agents/&lt;your folder&gt;/questions.txt</code>. Run both from inside <code>agents/&lt;your folder&gt;/</code> with the venv active.</p>
 <pre><code>python app.py "Does the Meridian EX have hands-free highway driving?"</code></pre>
   <p>In the console: main menu, select your project, select your agent stream, open <b>Traces</b>.</p>
@@ -750,6 +763,7 @@ FAILURE_MODE=fabricated_citation python run_batch.py 5</code></pre>
 <section id="notes" data-group="Instrument" data-title="8. Instrumentation notes">
   <h1>8. Instrumentation notes</h1>
   <p class="lead">Answer four questions in your own words, two or three sentences each. Keep them with your worksheet as <code>agents/&lt;your folder&gt;/readout/instrumentation-notes.md</code>. Your coach will ask about them.</p>
+  <div class="docs"><b>Official docs</b><ul><li><a href="https://agent-observability-docs.splunk.com/sdk-api/logging/logging-basics" target="_blank" rel="noopener">Instrumentation (logging basics)</a></li><li><a href="https://agent-observability-docs.splunk.com/sdk-api/third-party-integrations/langchain/langchain" target="_blank" rel="noopener">LangChain and LangGraph integration (callback, metadata)</a></li></ul></div>
   <ol>
     <li>Where does a trace start and end in your agent, and why there?</li>
     <li>Which parts of a run became which kind of span, and why?</li>
@@ -773,6 +787,7 @@ FAILURE_MODE=fabricated_citation python run_batch.py 5</code></pre>
 <section id="judge" data-group="Evaluate and act" data-title="9. Build the custom judge">
   <h1>9. Build the custom judge</h1>
   <p class="lead">A custom LLM-as-a-judge evaluator that checks every claimed feature against the vehicle's inventory record. This is the win condition for the scenario.</p>
+  <div class="docs"><b>Official docs</b><ul><li><a href="https://agent-observability-docs.splunk.com/concepts/logging/configure-evaluators/configure-evaluators" target="_blank" rel="noopener">Agent Stream Evaluators (Configure Evaluators)</a></li><li><a href="https://agent-observability-docs.splunk.com/concepts/evaluators/custom-evaluators/custom-evaluators-ui-llm" target="_blank" rel="noopener">Custom LLM-as-a-Judge Evaluators</a></li><li><a href="https://agent-observability-docs.splunk.com/concepts/evaluators/custom-evaluators/prompt-engineering" target="_blank" rel="noopener">LLM-as-a-Judge Prompt Engineering Guide</a></li><li><a href="https://agent-observability-docs.splunk.com/concepts/evaluators/custom-evaluators/test-evaluators" target="_blank" rel="noopener">Test Custom Evaluators</a></li><li><a href="https://agent-observability-docs.splunk.com/concepts/evaluators/autotune-llm-as-a-judge-evaluators" target="_blank" rel="noopener">Improve LLM-as-a-Judge Evaluators with Autotune</a></li></ul></div>
   <div class="callout warn"><b class="t">Before you start</b>
     LLM-judge evaluators need a <b>model integration on the org</b>. If the model picker is empty or errors, that's the org, not you. Ask the facilitator.</div>
   <div class="callout warn"><b class="t">An LLM-as-a-judge evaluator is not a guardrail today</b>
@@ -892,6 +907,7 @@ Rewrite the prompt to be more specific so this reply scores false and an honest 
 <section id="builtin" data-group="Evaluate and act" data-title="9b. No custom judge? Built-in evaluators">
   <h1>9b. No custom judge? Use built-in evaluators</h1>
   <p class="lead">The out-of-the-box route, for when you can't get a model integration, are short on time, or want to show a built-in evaluator next to the custom one.</p>
+  <div class="docs"><b>Official docs</b><ul><li><a href="https://agent-observability-docs.splunk.com/concepts/evaluators/overview" target="_blank" rel="noopener">Evaluators Overview</a></li><li><a href="https://agent-observability-docs.splunk.com/concepts/evaluators/evaluator-comparison" target="_blank" rel="noopener">Evaluators Comparison (built-in evaluators)</a></li><li><a href="https://agent-observability-docs.splunk.com/concepts/evaluators/response-quality/correctness" target="_blank" rel="noopener">Correctness</a></li><li><a href="https://agent-observability-docs.splunk.com/concepts/evaluators/rag/generation-quality/context-adherence" target="_blank" rel="noopener">Context Adherence</a></li><li><a href="https://agent-observability-docs.splunk.com/concepts/evaluators/safety-and-compliance/pii" target="_blank" rel="noopener">PII</a></li><li><a href="https://agent-observability-docs.splunk.com/concepts/evaluators/safety-and-compliance/prompt-injection" target="_blank" rel="noopener">Prompt Injection</a></li><li><a href="https://agent-observability-docs.splunk.com/concepts/luna/luna" target="_blank" rel="noopener">Luna-3 Overview</a></li></ul></div>
 
   <div class="callout warn"><b class="t">Be upfront about what built-ins can't catch here</b>
     The scenario's win condition is a <b>custom judge grounded against inventory</b>, because the brochure-vs-inventory failure is hard for a generic evaluator. The false claim is <i>in the context</i> (the <code>BR-999</code> brochure says it), so a check that only asks "is the reply supported by the context?" can pass it. I haven't run <b>Correctness</b> or <b>Context Adherence</b> on this failure, so test them yourself before you claim either way. If a built-in doesn't flag it, say so at the readout and use it as your reason for building the custom judge.
@@ -954,6 +970,7 @@ FAILURE_MODE=fabricated_citation python app.py "Does the Meridian EX have hands-
 <section id="alert" data-group="Evaluate and act" data-title="10. Set up the alert">
   <h1>10. Set up the alert</h1>
   <p class="lead">Answers "how would I know without watching the UI?". It tells a person when the judge flags a failure.</p>
+  <div class="docs"><b>Official docs</b><ul><li><a href="https://agent-observability-docs.splunk.com/how-to-guides/basics/set-up-alerts-on-logs" target="_blank" rel="noopener">Set Up Alerts on Logs</a></li><li><a href="https://agent-observability-docs.splunk.com/concepts/logging/configure-evaluators/configure-evaluators" target="_blank" rel="noopener">Agent Stream Evaluators (Configure Evaluators)</a></li></ul></div>
   <ol class="steps">
     <li>Main menu, select your project, select your agent stream, open the <b>Alerts</b> tab, then <b>Create alert</b>.</li>
     <li>Set the four fields: evaluator, aggregation, threshold, time window.</li>
@@ -986,6 +1003,7 @@ FAILURE_MODE=fabricated_citation python app.py "Does the Meridian EX have hands-
 <section id="control" data-group="Evaluate and act" data-title="11. Add a runtime control">
   <h1>11. Add a runtime control</h1>
   <p class="lead">An alert tells someone. A control stops the bad reply before the shopper sees it. It has a console half and a code half.</p>
+  <div class="docs"><b>Official docs</b><ul><li><a href="https://agent-observability-docs.splunk.com/concepts/agent-control/overview" target="_blank" rel="noopener">Agent Control overview</a></li><li><a href="https://agent-observability-docs.splunk.com/how-to-guides/agent-control/create-a-control" target="_blank" rel="noopener">Create a control</a></li><li><a href="https://agent-observability-docs.splunk.com/how-to-guides/agent-control/initialize-and-configure-agent-control" target="_blank" rel="noopener">Initialize and configure Agent Control</a></li><li><a href="https://agent-observability-docs.splunk.com/how-to-guides/agent-control/monitor-a-control" target="_blank" rel="noopener">Monitor a control</a></li><li><a href="https://agent-observability-docs.splunk.com/sdk-api/python/reference/handlers/agent_control/bridge" target="_blank" rel="noopener">Agent Control bridge (SDK reference)</a></li><li><a href="https://agent-observability-docs.splunk.com/sdk-api/logging/splunk-ao-logger" target="_blank" rel="noopener">Splunk Agent Observability Logger (SplunkAOLogger)</a></li><li><a href="https://docs.agentcontrol.dev/how-to/decorate-llm-tool-calls" target="_blank" rel="noopener">Decorate LLM and tool calls (Agent Control docs)</a></li><li><a href="https://docs.agentcontrol.dev/concepts/controls" target="_blank" rel="noopener">Controls (Agent Control docs)</a></li></ul></div>
   <p>Docs: <a href="https://agent-observability-docs.splunk.com/concepts/agent-control/overview.md" target="_blank" rel="noopener">Agent Control</a>, then Create a control, Initialize and configure, Monitor a control.</p>
 
   <div class="callout warn"><b class="t">Why the control uses a rule and not your judge</b>
@@ -1105,6 +1123,7 @@ EOF</code></pre>
 <section id="validate" data-group="Validate" data-title="12. Validate clean vs failure">
   <h1>12. Validate clean vs failure</h1>
   <p class="lead">Prove the failure gets caught and stopped, and that clean traffic is left alone.</p>
+  <div class="docs"><b>Official docs</b><ul><li><a href="https://agent-observability-docs.splunk.com/how-to-guides/agent-control/monitor-a-control" target="_blank" rel="noopener">Monitor a control</a></li><li><a href="https://agent-observability-docs.splunk.com/concepts/evaluators/custom-evaluators/test-evaluators" target="_blank" rel="noopener">Test Custom Evaluators</a></li><li><a href="https://agent-observability-docs.splunk.com/concepts/logging/configure-evaluators/configure-evaluators" target="_blank" rel="noopener">Agent Stream Evaluators (Configure Evaluators)</a></li></ul></div>
   <ol class="steps">
     <li>Send clean traffic: <code>FAILURE_MODE=none python run_batch.py 10</code>. Nothing should flag.</li>
     <li>Send the failure: <code>FAILURE_MODE=fabricated_citation python run_batch.py 5</code>, plus the targeted question a few times.</li>
@@ -1283,6 +1302,7 @@ EOF</code></pre>
 <section id="stretch" data-group="Reference" data-title="Stretch: experiments and a UI">
   <h1>Stretch: experiments and a UI</h1>
   <p class="lead">Beyond the required steps. Use them if you have time.</p>
+  <div class="docs"><b>Official docs</b><ul><li><a href="https://agent-observability-docs.splunk.com/sdk-api/experiments/experiments" target="_blank" rel="noopener">Experiments Basics</a></li><li><a href="https://agent-observability-docs.splunk.com/sdk-api/experiments/datasets" target="_blank" rel="noopener">Datasets</a></li><li><a href="https://agent-observability-docs.splunk.com/sdk-api/experiments/running-experiments" target="_blank" rel="noopener">Run Experiments in Code</a></li><li><a href="https://agent-observability-docs.splunk.com/concepts/experiments/running-experiments-in-console" target="_blank" rel="noopener">Run Experiments in Playgrounds</a></li><li><a href="https://agent-observability-docs.splunk.com/concepts/evaluators/custom-evaluators/test-evaluators" target="_blank" rel="noopener">Test Custom Evaluators</a></li></ul></div>
 
   <h2>Test the judge against labeled examples</h2>
   <p>This answers "is this calibrated?" with a number. It's a dataset test on the evaluator, not a full experiment.</p>
@@ -1304,6 +1324,29 @@ EOF</code></pre>
   <p>A small Gradio page can call the same <code>ask()</code>, so the callback, metadata and control still run on every message. It adds a shopper dropdown and a failure-mode dropdown, and shows when the control blocked a reply. Keep it out of the readout beyond triggering traffic, since time on the agent itself counts against you.</p>
 <pre><code>pip install gradio
 python ui.py        # http://127.0.0.1:7860</code></pre>
+</section>
+
+
+<!-- ===================================================== REFERENCES -->
+<section id="references" data-group="Reference" data-title="Official docs">
+  <h1>Official docs</h1>
+  <p class="lead">This page is a study guide. The product documentation is the source of truth, so check it for current behavior, screens and version-specific details. Docs live at <a href="https://agent-observability-docs.splunk.com" target="_blank" rel="noopener">agent-observability-docs.splunk.com</a>, and the Agent Control concepts at <a href="https://docs.agentcontrol.dev" target="_blank" rel="noopener">docs.agentcontrol.dev</a>.</p>
+  <div class="callout"><b class="t">Tip</b>
+    The docs site publishes an index of every page at <a href="https://agent-observability-docs.splunk.com/llms.txt" target="_blank" rel="noopener">llms.txt</a>, and adding <code>.md</code> to a page's address returns a plain-text version that is easy to paste into an assistant.</div>
+  <div class="ref">
+  <h3>Getting started and instrumentation</h3>
+  <ul><li><a href="https://agent-observability-docs.splunk.com/getting-started/quickstart" target="_blank" rel="noopener">Log Your First Trace (quickstart)</a>: First trace and the required variables.</li><li><a href="https://agent-observability-docs.splunk.com/sdk-api/logging/logging-basics" target="_blank" rel="noopener">Instrumentation (logging basics)</a>: The two instrumentation routes: SDK logger and framework integrations.</li><li><a href="https://agent-observability-docs.splunk.com/sdk-api/third-party-integrations/langchain/langchain" target="_blank" rel="noopener">LangChain and LangGraph integration (callback, metadata)</a>: The callback (SplunkAOCallback) and the RunnableConfig metadata and tags used in steps 5 and 6.</li><li><a href="https://agent-observability-docs.splunk.com/sdk-api/logging/splunk-ao-logger" target="_blank" rel="noopener">Splunk Agent Observability Logger (SplunkAOLogger)</a>: SplunkAOLogger, used in step 11 to look up the agent stream ID.</li><li><a href="https://agent-observability-docs.splunk.com/sdk-api/logging/splunk-ao-context" target="_blank" rel="noopener">Splunk Agent Observability Context</a>: Trace context, relevant when running inside an experiment.</li><li><a href="https://agent-observability-docs.splunk.com/concepts/projects" target="_blank" rel="noopener">Projects</a>: Projects and agent streams.</li></ul>
+  <h3>Evaluators</h3>
+  <ul><li><a href="https://agent-observability-docs.splunk.com/concepts/evaluators/overview" target="_blank" rel="noopener">Evaluators Overview</a>: What evaluators are and how they're grouped.</li><li><a href="https://agent-observability-docs.splunk.com/concepts/evaluators/evaluator-comparison" target="_blank" rel="noopener">Evaluators Comparison (built-in evaluators)</a>: The out-of-the-box evaluators.</li><li><a href="https://agent-observability-docs.splunk.com/concepts/logging/configure-evaluators/configure-evaluators" target="_blank" rel="noopener">Agent Stream Evaluators (Configure Evaluators)</a>: Turning evaluators on for an agent stream (Configure Evaluators) and evaluator filters.</li><li><a href="https://agent-observability-docs.splunk.com/concepts/evaluators/custom-evaluators/custom-evaluators-ui-llm" target="_blank" rel="noopener">Custom LLM-as-a-Judge Evaluators</a>: Creating a custom LLM-as-a-judge evaluator (step 9).</li><li><a href="https://agent-observability-docs.splunk.com/concepts/evaluators/custom-evaluators/prompt-engineering" target="_blank" rel="noopener">LLM-as-a-Judge Prompt Engineering Guide</a>: Writing the judge prompt: rubric wording and what to avoid.</li><li><a href="https://agent-observability-docs.splunk.com/concepts/evaluators/custom-evaluators/test-evaluators" target="_blank" rel="noopener">Test Custom Evaluators</a>: Testing an evaluator on manual input, current logs or a labeled dataset (macro F1).</li><li><a href="https://agent-observability-docs.splunk.com/concepts/evaluators/autotune-llm-as-a-judge-evaluators" target="_blank" rel="noopener">Improve LLM-as-a-Judge Evaluators with Autotune</a>: Autotune for improving a judge from feedback.</li><li><a href="https://agent-observability-docs.splunk.com/concepts/evaluators/response-quality/correctness" target="_blank" rel="noopener">Correctness</a>: Built-in Correctness (step 9b).</li><li><a href="https://agent-observability-docs.splunk.com/concepts/evaluators/rag/generation-quality/context-adherence" target="_blank" rel="noopener">Context Adherence</a>: Built-in Context Adherence (step 9b).</li><li><a href="https://agent-observability-docs.splunk.com/concepts/evaluators/safety-and-compliance/pii" target="_blank" rel="noopener">PII</a>: Built-in PII evaluator.</li><li><a href="https://agent-observability-docs.splunk.com/concepts/evaluators/safety-and-compliance/prompt-injection" target="_blank" rel="noopener">Prompt Injection</a>: Built-in Prompt Injection evaluator.</li><li><a href="https://agent-observability-docs.splunk.com/concepts/luna/luna" target="_blank" rel="noopener">Luna-3 Overview</a>: Luna small-model evaluators.</li></ul>
+  <h3>Alerts</h3>
+  <ul><li><a href="https://agent-observability-docs.splunk.com/how-to-guides/basics/set-up-alerts-on-logs" target="_blank" rel="noopener">Set Up Alerts on Logs</a>: Alerts, email, Slack and generic webhook notifications (step 10).</li></ul>
+  <h3>Agent Control (runtime controls)</h3>
+  <ul><li><a href="https://agent-observability-docs.splunk.com/concepts/agent-control/overview" target="_blank" rel="noopener">Agent Control overview</a>: Overview and the packages to install.</li><li><a href="https://agent-observability-docs.splunk.com/how-to-guides/agent-control/create-a-control" target="_blank" rel="noopener">Create a control</a>: Creating and attaching a control in the console (step 11, half 1).</li><li><a href="https://agent-observability-docs.splunk.com/how-to-guides/agent-control/initialize-and-configure-agent-control" target="_blank" rel="noopener">Initialize and configure Agent Control</a>: Environment variables, init and the @control decorator (step 11, half 2).</li><li><a href="https://agent-observability-docs.splunk.com/how-to-guides/agent-control/monitor-a-control" target="_blank" rel="noopener">Monitor a control</a>: The Control View and how a control ran in a trace.</li><li><a href="https://agent-observability-docs.splunk.com/sdk-api/python/reference/handlers/agent_control/bridge" target="_blank" rel="noopener">Agent Control bridge (SDK reference)</a>: How Agent Control events attach to Splunk AO traces.</li><li><a href="https://docs.agentcontrol.dev/how-to/decorate-llm-tool-calls" target="_blank" rel="noopener">Decorate LLM and tool calls (Agent Control docs)</a>: The @control decorator for LLM and tool steps.</li><li><a href="https://docs.agentcontrol.dev/concepts/controls" target="_blank" rel="noopener">Controls (Agent Control docs)</a>: Control concepts: scope, stage, selector, evaluator, action.</li></ul>
+  <h3>Experiments and datasets (stretch)</h3>
+  <ul><li><a href="https://agent-observability-docs.splunk.com/sdk-api/experiments/experiments" target="_blank" rel="noopener">Experiments Basics</a>: Components of an experiment and the typical flow.</li><li><a href="https://agent-observability-docs.splunk.com/sdk-api/experiments/datasets" target="_blank" rel="noopener">Datasets</a>: Creating and managing datasets, including Evaluator Ground Truth.</li><li><a href="https://agent-observability-docs.splunk.com/sdk-api/experiments/running-experiments" target="_blank" rel="noopener">Run Experiments in Code</a>: run_experiment with a prompt template, generated output or a custom function.</li><li><a href="https://agent-observability-docs.splunk.com/concepts/experiments/running-experiments-in-console" target="_blank" rel="noopener">Run Experiments in Playgrounds</a>: Running experiments in the console.</li></ul>
+  </div>
+  <div class="callout warn"><b class="t">Things this guide says that the docs may not</b>
+    The "LLM-as-a-judge isn't a guardrail yet (coming soon, in staging)" note and the metadata-fields workaround come from the workshop team, not from these pages. Check with your facilitator before relying on either with a customer.</div>
 </section>
 
   <div class="pager" id="pager"></div>
