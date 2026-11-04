@@ -414,10 +414,73 @@ python app.py "Does the Meridian EX have hands-free highway driving?"</code></pr
   <h1>4. Install the SDK and set variables</h1>
   <p class="lead">Before any code, give the agent the SDK and tell it where to send traces.</p>
   <p><span class="chip">Files</span> <code>agents/&lt;your folder&gt;/.env</code>, <code>agents/&lt;your folder&gt;/requirements.txt</code></p>
+
+  <h2>Find your credentials</h2>
+  <p>The SDK needs five values. They are not in the repo. Where you get them depends on where you're working.</p>
+  <table>
+    <tr><th>Variable</th><th>What it is</th><th>Where it comes from</th></tr>
+    <tr><td><code>SPLUNK_AO_CONSOLE_URL</code></td><td>The console's web address</td><td>Preset on the workshop host, or sent by the facilitator</td></tr>
+    <tr><td><code>SPLUNK_AO_API_URL</code></td><td>The API address the SDK sends traces to</td><td>Same</td></tr>
+    <tr><td><code>SPLUNK_AO_API_KEY</code></td><td>Your team's API key</td><td>Same. A secret.</td></tr>
+    <tr><td><code>SPLUNK_AO_PROJECT</code></td><td>The project your traces go in</td><td>Same. Use the one you're given, don't create another.</td></tr>
+    <tr><td><code>SPLUNK_AO_AGENT_STREAM</code></td><td>The stream inside the project</td><td>On the host it may be preset. Otherwise you choose it, for example <code>&lt;your-name&gt;-auto-retail</code>.</td></tr>
+  </table>
+
+  <h3>On the workshop host: look at what's already set</h3>
+<pre><code>env | grep SPLUNK_AO</code></pre>
+  <p>This lists every <code>SPLUNK_AO_*</code> variable in your shell. <b>It prints the API key in plain text</b>, so don't run it while screen sharing or paste its output anywhere. To check without showing secrets:</p>
+<pre><code>env | grep -E '^SPLUNK_AO' | sed -E 's/(KEY|PASSWORD|TOKEN)=.*/\1=&lt;hidden&gt;/'</code></pre>
+  <p>To check the model gateway settings as well, as the workshop notes suggest:</p>
+<pre><code>env | grep -E 'SPLUNK_AO|OPENAI'</code></pre>
+  <ul>
+    <li><b>You see the values:</b> the SDK reads them straight from your shell. A <code>.env</code> file is optional for these, because values already in the environment win over the file.</li>
+    <li><b>You see nothing:</b> you're not on the host, or the variables aren't set in this terminal. Ask the facilitator for the console URL, your project name, your team's API key and a model key, then put them in <code>.env</code> as below.</li>
+  </ul>
+
+  <h2>Create your <code>.env</code> file</h2>
+  <p>A <code>.env</code> file is a plain text file of <code>NAME=value</code> lines that the agent loads when it starts (<code>load_dotenv()</code> in <code>app.py</code>). The build skill ships a template, <code>.env.example</code>, with the model settings and <code>FAILURE_MODE=none</code>.</p>
+  <ol class="steps">
+    <li>Go to your agent folder and copy the template:
+<pre><code>cd agents/&lt;your folder&gt;
+cp .env.example .env</code></pre></li>
+    <li><b>If the host has the variables set</b>, copy them in with one command. Later lines override earlier ones, so this also fills in the empty <code>OPENAI_BASE_URL=</code> from the template:
+<pre><code>env | grep -E '^(SPLUNK_AO_|OPENAI_BASE_URL)' &gt;&gt; .env</code></pre></li>
+    <li><b>Otherwise</b>, open <code>.env</code> in your editor and add the lines yourself:
+<pre><code>SPLUNK_AO_CONSOLE_URL=&lt;console url&gt;
+SPLUNK_AO_API_URL=&lt;api url&gt;
+SPLUNK_AO_API_KEY=&lt;your team's api key&gt;
+SPLUNK_AO_PROJECT=&lt;your project&gt;
+SPLUNK_AO_AGENT_STREAM=&lt;your-name&gt;-auto-retail</code></pre></li>
+    <li>Set the model values. On the host, leave <code>OPENAI_API_KEY</code> empty, set <code>OPENAI_BASE_URL</code> to the gateway and <code>OPENAI_MODEL</code> to a model the gateway serves:
+<pre><code>OPENAI_API_KEY=
+OPENAI_BASE_URL=&lt;gateway url&gt;
+OPENAI_MODEL=&lt;a model your key allows&gt;</code></pre></li>
+    <li>Lock the file down so only you can read it:
+<pre><code>chmod 600 .env</code></pre></li>
+    <li>Check which values are set, without printing any secrets. Run it from the agent folder with the venv active:
+<pre><code>python - &lt;&lt;'EOF'
+import os
+from dotenv import load_dotenv
+load_dotenv(".env")
+for v in ["SPLUNK_AO_CONSOLE_URL", "SPLUNK_AO_API_URL", "SPLUNK_AO_API_KEY", "SPLUNK_AO_PROJECT",
+          "SPLUNK_AO_AGENT_STREAM", "OPENAI_BASE_URL", "OPENAI_MODEL"]:
+    print(f"{v:26s}", "set" if os.getenv(v) else "MISSING")
+EOF</code></pre>
+    Every line should say <code>set</code>. <code>OPENAI_API_KEY</code> can stay empty on the host.</li>
+  </ol>
+  <div class="callout bad"><b class="t">Treat <code>.env</code> like a password</b>
+    <ul>
+      <li>Don't commit it. If you use git, add it to <code>.gitignore</code>: <code>echo ".env" &gt;&gt; .gitignore</code>.</li>
+      <li>Don't paste it into chat, a ticket or a shared page, and don't share the agent folder.</li>
+      <li>Rotate the key if it leaks.</li>
+    </ul>
+  </div>
+  <div class="callout"><b class="t">Control settings come later</b>
+    The <code>AGENT_CONTROL_*</code> variables for step 11 go in the same <code>.env</code>. Ask the facilitator for the Agent Control URL. Per the docs, use the same API key unless your deployment has a separate Agent Control key.</div>
   <ol class="steps">
     <li>Install the SDK in the agent's venv:
 <pre><code>pip install "splunk-ao[langchain]"</code></pre></li>
-    <li>Set the variables the SDK reads, in <code>.env</code> (on the workshop host they may already be set):
+    <li>Set the variables the SDK reads (see "Create your .env file" above; on the workshop host they may already be set):
 <pre><code>SPLUNK_AO_CONSOLE_URL=&lt;console url&gt;
 SPLUNK_AO_API_URL=&lt;api url&gt;
 SPLUNK_AO_API_KEY=&lt;your team's api key&gt;
@@ -1043,6 +1106,8 @@ EOF</code></pre>
     <tr><td><code>NameError: data</code> in <code>ask()</code></td><td>Missing <code>import data</code></td><td>Add it at the top of <code>app.py</code></td></tr>
     <tr><td>Syntax error in <code>app.py</code> after adding the callback</td><td>Merged statements or lines outside <code>ask()</code></td><td>One statement per line, all indented inside <code>ask()</code></td></tr>
     <tr><td>Metadata shows as one field and I can't filter on <code>failure_mode</code> or <code>dealer_id</code></td><td>Known SDK issue: all metadata goes into the single <code>splunk_ao.metadata</code> attribute</td><td>Apply the workaround in step 6, then send fresh traffic. Old traces keep the single field</td></tr>
+    <tr><td><code>env | grep SPLUNK_AO</code> prints nothing</td><td>You're not on the workshop host, or the variables aren't set in this terminal</td><td>Ask the facilitator for the console URL, project, API key and a model key, and put them in <code>.env</code></td></tr>
+    <tr><td>The check script says <code>MISSING</code> for a variable</td><td>Not in <code>.env</code> and not in your shell, or the line has a typo or an empty value</td><td>Add or fix the line, then rerun the check. An empty <code>NAME=</code> counts as missing.</td></tr>
     <tr><td>No trace in the console</td><td>Wrong project or stream name, bad key, or the process exited before the flush</td><td>Check the <code>SPLUNK_AO_*</code> values; keep <code>flush_on_chain_end=True</code></td></tr>
     <tr><td>Evaluator shows a model-integration error</td><td>The org has no model integration for LLM judges</td><td>Tell the facilitator; it's the org, not you</td></tr>
     <tr><td>Judge doesn't flag the failure</td><td>It scored a span without the inventory record, or the failure question wasn't sent</td><td>Check which span it scores; run the targeted question</td></tr>
