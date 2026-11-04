@@ -1,0 +1,929 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Auto-Retail Challenge Refresher</title>
+<meta name="description" content="Step-by-step refresher for the Auto-Retail scenario of the Splunk Agent Observability Customer Challenge, with reference answers.">
+<style>
+:root{
+  --bg:#ffffff; --panel:#f6f7f9; --text:#1f2430; --muted:#5d6676; --line:#dfe3ea;
+  --accent:#0b6bcb; --accent-soft:#e6f0fb; --code-bg:#0f172a; --code-text:#e6edf7;
+  --info-bg:#e6f0fb; --info-line:#0b6bcb; --warn-bg:#fff4e0; --warn-line:#c77700;
+  --ok-bg:#e8f6ec; --ok-line:#1f8a4c; --bad-bg:#fdeaea; --bad-line:#c0392b;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#10141c; --panel:#171c27; --text:#e6e9ef; --muted:#9aa4b5; --line:#2a3242;
+    --accent:#5aa9ff; --accent-soft:#16263d; --code-bg:#0a0e16; --code-text:#e6edf7;
+    --info-bg:#14243a; --info-line:#5aa9ff; --warn-bg:#2b2113; --warn-line:#e0a040;
+    --ok-bg:#12281b; --ok-line:#4cc27b; --bad-bg:#2d1717; --bad-line:#e5705f;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#10141c; --panel:#171c27; --text:#e6e9ef; --muted:#9aa4b5; --line:#2a3242;
+  --accent:#5aa9ff; --accent-soft:#16263d; --code-bg:#0a0e16; --code-text:#e6edf7;
+  --info-bg:#14243a; --info-line:#5aa9ff; --warn-bg:#2b2113; --warn-line:#e0a040;
+  --ok-bg:#12281b; --ok-line:#4cc27b; --bad-bg:#2d1717; --bad-line:#e5705f;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+a{color:var(--accent)}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--bg);border-bottom:1px solid var(--line)}
+.topbar .name{font-weight:650;letter-spacing:.2px}
+.topbar .tag{font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:2px 10px}
+.spacer{flex:1}
+.btn{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:8px;padding:6px 12px;font:inherit;font-size:14px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+#menu-btn{display:none}
+.layout{display:grid;grid-template-columns:300px minmax(0,1fr);max-width:1280px;margin:0 auto}
+nav#side{position:sticky;top:54px;align-self:start;height:calc(100vh - 54px);overflow:auto;padding:16px 8px 32px 16px;border-right:1px solid var(--line)}
+nav#side .grp{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:18px 0 6px 8px}
+nav#side a{display:block;padding:5px 10px;border-radius:6px;color:var(--text);text-decoration:none;font-size:14.5px;line-height:1.35}
+nav#side a:hover{background:var(--panel)}
+nav#side a.active{background:var(--accent-soft);color:var(--accent);font-weight:600}
+main{padding:28px 32px 80px;max-width:900px;min-width:0}
+section{display:none}
+section.show{display:block}
+h1{font-size:30px;line-height:1.2;margin:0 0 6px}
+h2{font-size:21px;margin:34px 0 8px;padding-top:6px;border-top:1px solid var(--line)}
+h3{font-size:17px;margin:22px 0 6px}
+.lead{color:var(--muted);margin:0 0 18px}
+p,li{max-width:74ch}
+code{font:13.5px/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+pre{position:relative;margin:12px 0;background:var(--code-bg);color:var(--code-text);border-radius:8px;padding:14px 16px;overflow:auto;font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+pre code{background:none;border:0;padding:0;color:inherit;font:inherit}
+pre .cp{position:absolute;top:6px;right:6px;border:1px solid #33405a;background:#1a2334;color:#c8d3e6;border-radius:6px;font:12px system-ui;padding:3px 8px;cursor:pointer}
+pre .cp:hover{border-color:#5aa9ff}
+.callout{margin:16px 0;padding:12px 14px;border-left:4px solid var(--info-line);background:var(--info-bg);border-radius:0 8px 8px 0}
+.callout.warn{border-color:var(--warn-line);background:var(--warn-bg)}
+.callout.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.callout.bad{border-color:var(--bad-line);background:var(--bad-bg)}
+.callout b.t{display:block;margin-bottom:2px}
+.callout :last-child{margin-bottom:0}
+.done{margin:16px 0;padding:10px 14px;border:1px dashed var(--ok-line);border-radius:8px;background:var(--ok-bg)}
+details.solution{margin:16px 0;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+details.solution>summary{cursor:pointer;padding:10px 14px;font-weight:600;color:var(--accent);list-style:none}
+details.solution>summary::before{content:"\25B8  "}
+details.solution[open]>summary::before{content:"\25BE  "}
+details.solution>div{padding:2px 16px 14px;border-top:1px solid var(--line)}
+table{border-collapse:collapse;width:100%;margin:12px 0;font-size:14.5px;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:var(--panel);white-space:nowrap}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:44px;padding-top:18px;border-top:1px solid var(--line)}
+.pager a{flex:1;max-width:48%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;text-decoration:none;color:var(--text)}
+.pager a:hover{border-color:var(--accent)}
+.pager small{display:block;color:var(--muted);font-size:12px}
+.pager .next{text-align:right;margin-left:auto}
+.steps{counter-reset:s;list-style:none;padding:0}
+.steps>li{counter-increment:s;position:relative;padding-left:40px;margin:14px 0}
+.steps>li::before{content:counter(s);position:absolute;left:0;top:0;width:28px;height:28px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-weight:700;display:flex;align-items:center;justify-content:center;font-size:14px}
+.chip{display:inline-block;font-size:12px;border:1px solid var(--line);border-radius:999px;padding:1px 9px;margin-right:4px;color:var(--muted)}
+footer{margin-top:40px;color:var(--muted);font-size:13px}
+@media (max-width:860px){
+  .layout{grid-template-columns:1fr}
+  nav#side{position:fixed;inset:54px 0 0 0;height:auto;background:var(--bg);z-index:15;display:none;border:0}
+  nav#side.open{display:block}
+  #menu-btn{display:inline-block}
+  main{padding:20px 16px 70px}
+  .topbar .tag{display:none}
+}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <button class="btn" id="menu-btn" aria-label="Open contents">Contents</button>
+  <span class="name">Auto-Retail Challenge Refresher</span>
+  <span class="tag">Unofficial study guide</span>
+  <span class="spacer"></span>
+  <button class="btn" id="theme-btn" aria-label="Toggle light and dark">Theme</button>
+</div>
+<div class="layout">
+  <nav id="side" aria-label="Contents"></nav>
+  <main id="main">
+
+<!-- ===================================================== OVERVIEW -->
+<section id="overview" data-group="Start" data-title="Overview">
+  <h1>Auto-Retail Challenge Refresher</h1>
+  <p class="lead">A walkthrough of every step of the Auto-Retail scenario in the Splunk Agent Observability (SAO) Customer Challenge, with reference answers to check your work.</p>
+
+  <div class="callout">
+    <b class="t">How to use this page</b>
+    Do each step yourself first. Then open <b>Reference answer</b> to compare. The answers are examples, not the only right ones. A real team writes every cell in its own words, because a coach will ask you to explain each line and setting.
+  </div>
+  <div class="callout warn">
+    <b class="t">This is an unofficial study guide</b>
+    It is not an official Splunk page and it isn't a replacement for the product docs at
+    <a href="https://agent-observability-docs.splunk.com" target="_blank" rel="noopener">agent-observability-docs.splunk.com</a>.
+    Values shown as <code>&lt;like-this&gt;</code> are placeholders. Never paste real keys or passwords into a shared page.
+  </div>
+
+  <h2>The scenario in one minute</h2>
+  <p>You are the solutions engineer for an automotive retail marketplace. Their dealer-website <b>car-shopping assistant</b> is a four-step LangGraph agent (intake, route, resolve, write). Their feared failure is a <b>grounding failure between two of their own systems</b>: a brochure says a model has a hands-free driving package, but the inventory record for the specific vehicle does not, so the shopper is told the car has a feature it doesn't.</p>
+  <p>In the starter agent this is the planted failure <code>fabricated_citation</code>. With it on, the agent adds a fake brochure <code>BR-999</code> that says every Meridian trim has hands-free driving, while inventory record <code>V-2003</code> (the EX trim) says it doesn't.</p>
+
+  <h3>Who you present to</h3>
+  <table>
+    <tr><th>Role</th><th>Cares about</th></tr>
+    <tr><td>Buyer</td><td>Token spend, and one governance view across business units</td></tr>
+    <tr><td>Head of ML</td><td>"Is this calibrated?" about any evaluator you show</td></tr>
+    <tr><td>Technical evaluation owner</td><td>Runs a human-calibrated LLM-as-judge today and wants the loop automated; has seen the tour</td></tr>
+    <tr><td>New stakeholder</td><td>Governance, probably</td></tr>
+  </table>
+  <p><b>The win:</b> a custom judge grounded against the inventory record, with a rationale the head of ML would accept, plus honesty about what the tokenomics module does and doesn't attribute.</p>
+
+  <h2>The path at a glance</h2>
+  <ol class="steps">
+    <li><b>Read the scenario</b> and mark what the customer actually said.</li>
+    <li><b>Fill the design worksheet</b> (3 to 5 rows, each starting with a quote).</li>
+    <li><b>Generate the agent</b> with the build skill and prove the planted failure.</li>
+    <li><b>Instrument it</b>: callback, then metadata, then the first trace.</li>
+    <li><b>Evaluate</b>: a custom LLM-as-a-judge evaluator on the stream.</li>
+    <li><b>Act on the failure</b>: an alert and a runtime control.</li>
+    <li><b>Validate</b>: clean traffic stays clean, the failure is caught and stopped.</li>
+    <li><b>Write success criteria</b> and <b>present</b> a 10-minute customer meeting.</li>
+  </ol>
+
+  <h2>Rules of the road</h2>
+  <ul>
+    <li>Spend your time on the product and the customer, not on the agent. It is capped at four steps and four tools.</li>
+    <li>You may use Claude Code or Cursor to help write the instrumentation, but you must be able to explain every line.</li>
+    <li>If the scenario says the customer didn't ask for it, it isn't in your demo.</li>
+    <li>Don't use the <code>demo-builder</code> skill during the challenge. It is for afterwards.</li>
+  </ul>
+
+  <h2>Words you'll see</h2>
+  <table>
+    <tr><th>Term</th><th>Meaning</th></tr>
+    <tr><td>Agent stream</td><td>The bucket of traces inside a project. Some console screens still say "log stream". Same thing.</td></tr>
+    <tr><td>Trace / span</td><td>One shopper question is one trace. Steps, model calls and tool calls are spans inside it.</td></tr>
+    <tr><td>Evaluator</td><td>Scores a trace or span. Luna evaluators run on Splunk-hosted small models. LLM-judge evaluators need a model integration on the org.</td></tr>
+    <tr><td>Control</td><td>A runtime rule (Agent Control) that can allow, steer or deny what a step produces before it goes on.</td></tr>
+    <tr><td>Planted failure</td><td>A switch (<code>FAILURE_MODE</code>) that makes the agent misbehave the way the customer fears, so there is something to catch.</td></tr>
+  </table>
+</section>
+
+<!-- ===================================================== 1 READ -->
+<section id="read" data-group="Discover and design" data-title="1. Read the scenario">
+  <h1>1. Read the scenario</h1>
+  <p class="lead">File: <code>scenarios/auto-retail/SCENARIO.md</code>. Read it twice.</p>
+  <ol class="steps">
+    <li>Mark the three to five sentences the customer said that your demo must answer.</li>
+    <li>Separate <b>quotes</b> from <b>descriptions</b>. If the customer didn't say it, you don't know it. Don't invent it for the demo.</li>
+    <li>Note the traps in the scenario so you don't walk into them.</li>
+  </ol>
+  <div class="done"><b>Done when:</b> your team agrees on which quotes the demo must answer.</div>
+
+  <details class="solution"><summary>Reference answer: what was actually said</summary><div>
+    <p>The scenario's meeting notes say the wording is "close rather than exact".</p>
+    <table>
+      <tr><th>Who</th><th>What it says</th><th>Quote?</th></tr>
+      <tr><td>Technical evaluation owner</td><td>"We've seen these functionalities with other products."</td><td>Yes</td></tr>
+      <tr><td>Head of ML</td><td>"Is this calibrated?"</td><td>Yes</td></tr>
+      <tr><td>Buyer</td><td>Tokenomics caught his attention; the triage agent is his top priority; he wants one governance view across business units.</td><td>No, a paraphrase</td></tr>
+      <tr><td>The team</td><td>"We're not replacing LangFuse."</td><td>Yes, and it's the objection</td></tr>
+    </table>
+    <div class="callout bad"><b class="t">Not a quote</b>
+      The scenario's "The failure they have actually seen" section describes the brochure-vs-inventory problem. Nobody said it. Don't put it in quotation marks in your worksheet.</div>
+    <h3>Traps</h3>
+    <ul>
+      <li><b>The platform tour.</b> If your demo opens with the agent graph, you've lost the evaluation owner.</li>
+      <li><b>Attacking LangFuse.</b> They keep it. Answer the objection with what sits next to it.</li>
+      <li><b>Inventing a customer-facing path for tokenomics.</b> The tokenomics module groups by provider, model and user. It does not attribute cost per agent or per trace. The agent-stream metrics view does that.</li>
+    </ul>
+  </div></details>
+</section>
+
+<!-- ===================================================== 2 WORKSHEET -->
+<section id="worksheet" data-group="Discover and design" data-title="2. Fill the design worksheet">
+  <h1>2. Fill the design worksheet</h1>
+  <p class="lead">File: <code>worksheets/design-worksheet.md</code>. Save your copy as <code>agents/&lt;your folder&gt;/readout/worksheet.md</code> once the agent folder exists.</p>
+  <ol class="steps">
+    <li>Make three to five rows. Each starts with a customer quote, then what you'll show, which SAO feature does it, and how you'll set it up.</li>
+    <li>Under the table, list <b>the three screens</b> you'll show, <b>the metadata</b> you'll tag on every trace, and the <b>build path</b>.</li>
+    <li>Ask a coach to cross out anything the customer didn't ask for and sign off.</li>
+  </ol>
+  <div class="callout">
+    <b class="t">Rules of thumb the coach checks</b>
+    <ul>
+      <li>Three to five rows. More than five is a platform tour.</li>
+      <li>At least one row is an evaluator, and at least one row is something that acts on the failure: a runtime control, or an alert.</li>
+      <li>The feared failure appears in at least one row, and you can say which evaluator catches it and which control stops it.</li>
+      <li>Anything the scenario's traps say isn't this product's job is not on the sheet.</li>
+    </ul>
+  </div>
+  <div class="done"><b>Done when:</b> a coach has crossed out anything the customer didn't ask for and signed.</div>
+
+  <details class="solution"><summary>Reference answer: an example worksheet</summary><div>
+    <table>
+      <tr><th>#</th><th>Customer said</th><th>We'll show</th><th>SAO feature</th><th>How we set it up</th></tr>
+      <tr><td>1</td><td>"We've seen these functionalities with other products." (technical evaluation owner, who wants the loop automated)</td><td>A flagged trace for the Meridian EX question: the reply claims hands-free driving, the inventory record says it doesn't, and a custom judge catches it with no human in the loop.</td><td>Custom LLM-as-a-judge evaluator on the stream (Configure Evaluators)</td><td>Write the judge in the customer's definition of a bad answer: any feature claimed in the reply must appear in the inventory record for that vehicle. Needs the org's model integration. Run clean traffic first, then the failure.</td></tr>
+      <tr><td>2</td><td>"Is this calibrated?" (head of ML)</td><td>The judge's written rationale on the flagged trace, plus 10 clean runs (nothing flagged) against failure runs (flagged). Say plainly what calibration still needs: their human-labeled examples.</td><td>Evaluator score and rationale per trace; the <code>failure_mode</code> metadata filter</td><td>Run <code>run_batch.py 10</code> with the failure off and <code>run_batch.py 5</code> with it on. Filter on <code>failure_mode</code>. Read two rationales aloud. Don't claim the judge is calibrated.</td></tr>
+      <tr><td>3</td><td>No quote. From the scenario's description of the failure; acting on it is our addition, so a coach may cross it out unless tied to a quote.</td><td>The failure acted on, not just seen: the bad reply is stopped before the shopper gets it.</td><td>One runtime control (Agent Control) on the writer step, or an alert</td><td>Deny a reply that cites <code>BR-999</code> and swap in a handoff message. Confirm clean traffic, including the true "EX does not have hands-free" answer, is left alone. Add an alert so someone is told.</td></tr>
+      <tr><td>4</td><td>Buyer (paraphrase, not a quote): tokenomics and one governance view across business units</td><td>Cost and tokens per agent and per trace, filtered by business unit; one place to see all projects.</td><td>Agent-stream metrics for per-agent and per-trace cost; tokenomics for spend by provider, model and user</td><td>Tag every trace with <code>business_unit</code> and <code>model</code>. Say plainly that tokenomics doesn't attribute cost per agent or per trace.</td></tr>
+    </table>
+    <h3>The three screens</h3>
+    <ol>
+      <li>The flagged Meridian EX trace with the failure on, next to the inventory record, with the control or alert acting on it.</li>
+      <li>The same trace's judge rationale, with clean versus failure traffic split by <code>failure_mode</code>.</li>
+      <li>Cost and tokens per agent and per trace, filtered by <code>business_unit</code>, with an honest note on what tokenomics doesn't attribute.</li>
+    </ol>
+    <h3>Metadata to tag on every trace</h3>
+    <ul>
+      <li><code>business_unit</code>: which business unit owns the agent (value is an assumption, <code>dealer-web-chat</code>)</li>
+      <li><code>dealer_id</code>: the dealer site the shopper is chatting on (assumption)</li>
+      <li><code>shopper_id</code>: who is asking</li>
+      <li><code>model</code>: the LLM serving the run</li>
+      <li><code>failure_mode</code>: separates clean traffic from the planted failure</li>
+    </ul>
+    <h3>Build path and hand-off</h3>
+    <p>Framework from the scenario is LangGraph, so the skill is <code>build-agent-langgraph</code>. Out of scope: developer-level tracing stays in LangFuse, and fixing the brochure-to-inventory sync belongs to the dealer-management-system team.</p>
+  </div></details>
+</section>
+
+<!-- ===================================================== 3 GENERATE -->
+<section id="generate" data-group="Build the agent" data-title="3. Generate the agent">
+  <h1>3. Generate the agent</h1>
+  <p class="lead">A few minutes later you have a small working LangGraph agent, mock data, about 30 shopper questions and one planted failure. It has no observability code in it.</p>
+
+  <h2>Run the build skill</h2>
+  <p>In Claude Code, from the repo root:</p>
+<pre><code>/build-agent-langgraph scenarios/auto-retail/brief.yaml</code></pre>
+  <p>In Cursor, ask: "build the agent for scenarios/auto-retail/brief.yaml on the langgraph path".</p>
+  <p>Underneath it runs the scaffold script, then customizes only the blocks marked <code># CUSTOMIZE:</code>:</p>
+<pre><code>python3 shared/scaffold.py --skill build-agent-langgraph \
+  --brief scenarios/auto-retail/brief.yaml \
+  --out agents/auto-retail-langgraph</code></pre>
+
+  <h2>Set up and smoke-test</h2>
+<pre><code>cd agents/auto-retail-langgraph
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env      # then fill in the model gateway values</code></pre>
+  <p>Ask a question with the failure off, then with it on:</p>
+<pre><code>python app.py "Does the Meridian EX have hands-free highway driving?"
+
+FAILURE_MODE=fabricated_citation python app.py "Does the Meridian EX have hands-free highway driving?"</code></pre>
+  <div class="done"><b>Done when:</b> the first answers, and the second visibly shows the failure.</div>
+
+  <details class="solution"><summary>Reference answer: what you should see</summary><div>
+    <ul>
+      <li><b>Failure off:</b> the reply says the EX does <b>not</b> include hands-free driving (it is in a higher package) and cites <code>BR-002</code>.</li>
+      <li><b>Failure on:</b> the reply says the EX <b>does</b> have hands-free highway driving and ends with <code>Sources: BR-999</code>.</li>
+    </ul>
+    <p>Run the skeleton check. At this point it should print <code>OK</code>:</p>
+<pre><code>python shared/check_skeleton.py agents/auto-retail-langgraph</code></pre>
+    <div class="callout warn"><b class="t">It will fail later, on purpose</b>
+      Once you add the callback to <code>app.py</code>, the check flags the observability import. That is expected: the check is for the starter, not your finished work.</div>
+    <h3>If something goes wrong</h3>
+    <table>
+      <tr><th>Symptom</th><th>Fix</th></tr>
+      <tr><td><code>403 key_model_access_denied</code></td><td>Your key can't use that model. Set <code>OPENAI_MODEL</code> in <code>.env</code> to one your key allows (for the workshop gateway, <code>gpt-4.1-mini</code>).</td></tr>
+      <tr><td><code>agent_control</code> import error in <code>agent/graph.py</code></td><td>The old template imported a package the skeleton check forbids. Replace it with a plain four-node graph, or use the newer template.</td></tr>
+      <tr><td>Skeleton check fails on leftover HR text</td><td>Rename any leftover HR names in <code>data.py</code> and the README title.</td></tr>
+      <tr><td><code>OPENAI_BASE_URL</code> missing</td><td>Add it to <code>.env</code> by hand if the example file lacks it. It's the workshop gateway URL.</td></tr>
+    </table>
+    <h3>What the agent looks like</h3>
+    <ul>
+      <li>Four steps: <code>intake</code>, <code>route</code> (knowledge, action or escalate), <code>resolve</code> (brochure and inventory lookup, or one tool) and <code>write</code>.</li>
+      <li>Three tools: <code>search_inventory</code>, <code>estimate_payment</code>, <code>schedule_test_drive</code>.</li>
+      <li><code>failure.py</code> reads <code>FAILURE_MODE</code> on every call.</li>
+    </ul>
+  </div></details>
+</section>
+
+<!-- ===================================================== 4 SETUP -->
+<section id="setup" data-group="Instrument" data-title="4. Install the SDK and set variables">
+  <h1>4. Install the SDK and set variables</h1>
+  <p class="lead">Before any code, give the agent the SDK and tell it where to send traces.</p>
+  <ol class="steps">
+    <li>Install the SDK in the agent's venv:
+<pre><code>pip install "splunk-ao[langchain]"</code></pre></li>
+    <li>Set the variables the SDK reads, in <code>.env</code> (on the workshop host they may already be set):
+<pre><code>SPLUNK_AO_CONSOLE_URL=&lt;console url&gt;
+SPLUNK_AO_API_URL=&lt;api url&gt;
+SPLUNK_AO_API_KEY=&lt;your team's api key&gt;
+SPLUNK_AO_PROJECT=&lt;your project&gt;
+SPLUNK_AO_AGENT_STREAM=&lt;your-name&gt;-auto-retail</code></pre></li>
+    <li>Name your own agent stream so your traces are easy to find in a shared project.</li>
+  </ol>
+  <div class="callout bad"><b class="t">Keep credentials out of shared places</b>
+    <code>.env</code> holds secrets. Don't commit it, paste it into chat, or share the folder.</div>
+  <div class="done"><b>Done when:</b> the SDK imports without error and the variables are set.</div>
+
+  <details class="solution"><summary>Reference answer: the dependency trap</summary><div>
+    <p>After installing <code>splunk-ao[langchain]</code>, the agent may crash on startup:</p>
+<pre><code>module 'langchain' has no attribute 'debug'</code></pre>
+    <p>The SDK pulled in <code>langchain</code> 1.x alongside <code>langchain-core</code> 0.3.x. Pin it back:</p>
+<pre><code>pip install "langchain&gt;=0.3,&lt;1.0"</code></pre>
+    <p>Then record it in <code>requirements.txt</code> so a fresh venv works:</p>
+<pre><code>langgraph&gt;=0.2,&lt;1.0
+langchain&gt;=0.3,&lt;1.0
+langchain-core&gt;=0.3,&lt;1.0
+langchain-openai&gt;=0.2,&lt;1.0
+python-dotenv&gt;=1.0
+splunk-ao[langchain]</code></pre>
+  </div></details>
+</section>
+
+<!-- ===================================================== 5 CALLBACK -->
+<section id="callback" data-group="Instrument" data-title="5. Add the callback">
+  <h1>5. Add the callback</h1>
+  <p class="lead">One object, attached to the graph call, inside <code>ask()</code> in <code>app.py</code> and nowhere else.</p>
+  <p>Docs: <a href="https://agent-observability-docs.splunk.com/sdk-api/third-party-integrations/langchain/langchain" target="_blank" rel="noopener">LangChain integration</a>. Work from the docs first; the answer is below.</p>
+  <ol class="steps">
+    <li>Import the handler.</li>
+    <li>Create it inside <code>ask()</code>, so each question gets its own.</li>
+    <li>Pass it to <code>graph.invoke(...)</code> through <code>config</code>.</li>
+  </ol>
+  <div class="done"><b>Done when:</b> <code>python app.py "&lt;a question&gt;"</code> still answers.</div>
+
+  <details class="solution"><summary>Reference answer: the code</summary><div>
+<pre><code>from langchain_core.runnables.config import RunnableConfig
+from splunk_ao.handlers.langchain import SplunkAOCallback
+
+def ask(graph, request: str, user_id: str = USER_ID) -&gt; dict:
+    callback = SplunkAOCallback(flush_on_chain_end=True)
+    config = RunnableConfig(callbacks=[callback])
+    return graph.invoke({"request": request, "user_id": user_id}, config=config)</code></pre>
+    <h3>Line by line</h3>
+    <table>
+      <tr><th>Line</th><th>What it does and why</th></tr>
+      <tr><td><code>SplunkAOCallback(...)</code></td><td>The SDK's LangChain/LangGraph handler. LangGraph reports every node, model call and tool call to it, and it builds them into one trace tree. No spans to write by hand.</td></tr>
+      <tr><td>Created inside <code>ask()</code></td><td>Each top-level invocation starts a new session and trace, so one question is one trace. It's in <code>ask()</code> because <code>app.py</code> and <code>run_batch.py</code> both use it, so all traffic is traced.</td></tr>
+      <tr><td><code>flush_on_chain_end=True</code></td><td>Sends the trace as soon as the run finishes. Without it, a short <code>python app.py "..."</code> can exit before the buffered trace is sent.</td></tr>
+      <tr><td><code>config=config</code></td><td>Passing the config is what turns tracing on. Before, it was a bare <code>graph.invoke({...})</code>.</td></tr>
+    </table>
+    <div class="callout"><b class="t">Nothing in <code>agent/</code> changes</b>
+      LangGraph hands the callback to every node, so the four steps, tools and model calls are all traced from this one place.</div>
+  </div></details>
+</section>
+
+<!-- ===================================================== 6 METADATA -->
+<section id="metadata" data-group="Instrument" data-title="6. Add metadata">
+  <h1>6. Add metadata</h1>
+  <p class="lead">Tag every trace with what the customer wants to filter by. The keys come from your worksheet.</p>
+  <ol class="steps">
+    <li>Add a <code>metadata</code> dictionary to the same <code>RunnableConfig</code>.</li>
+    <li>Use the five keys: <code>business_unit</code>, <code>dealer_id</code>, <code>shopper_id</code>, <code>model</code>, <code>failure_mode</code>.</li>
+    <li><code>dealer_id</code> needs a field on each shopper record in <code>data.py</code>.</li>
+  </ol>
+  <div class="done"><b>Done when:</b> a trace in the console shows your metadata.</div>
+
+  <details class="solution"><summary>Reference answer: the code</summary><div>
+    <p>In <code>data.py</code>, give each shopper a dealer:</p>
+<pre><code>RECORDS = {
+    "S-10001": {"name": "...", "dealer_id": "D-LAKESIDE", ...},
+    "S-10002": {"name": "...", "dealer_id": "D-NORTHGATE", ...},
+    "S-10003": {"name": "...", "dealer_id": "D-EASTFIELD", ...},
+}</code></pre>
+    <p>In <code>app.py</code>, add <code>import data</code> at the top and extend the config:</p>
+<pre><code>config = RunnableConfig(
+    callbacks=[callback],
+    metadata={
+        "business_unit": os.getenv("BUSINESS_UNIT", "dealer-web-chat"),
+        "dealer_id": data.RECORDS.get(user_id, {}).get("dealer_id", "unknown"),
+        "shopper_id": user_id,
+        "model": os.getenv("OPENAI_MODEL", "gpt-4.1-mini"),
+        "failure_mode": mode(),
+    },
+    tags=["auto-retail"],
+)</code></pre>
+    <table>
+      <tr><th>Key</th><th>Source</th><th>Customer question it answers</th></tr>
+      <tr><td><code>business_unit</code></td><td><code>BUSINESS_UNIT</code> env, default <code>dealer-web-chat</code> (an assumption)</td><td>Spend and governance per business unit</td></tr>
+      <tr><td><code>dealer_id</code></td><td><code>data.RECORDS[user_id]["dealer_id"]</code></td><td>Group by dealer site</td></tr>
+      <tr><td><code>shopper_id</code></td><td>the <code>user_id</code> argument</td><td>Find one conversation</td></tr>
+      <tr><td><code>model</code></td><td><code>OPENAI_MODEL</code></td><td>Compare cost and quality per LLM</td></tr>
+      <tr><td><code>failure_mode</code></td><td><code>mode()</code> from <code>failure.py</code></td><td>Separate clean traffic from the planted failure</td></tr>
+    </table>
+    <p>State your assumptions at the readout: the <code>business_unit</code> default is made up, <code>dealer_id</code> means the dealer site the shopper is on, and <code>model</code> means the LLM, not the vehicle model.</p>
+    <div class="callout warn"><b class="t">Common mistakes</b>
+      <ul>
+        <li>Two statements merged on one line (<code>...SplunkAOCallbackcallback = ...</code>), or code outside <code>ask()</code> because of missing indentation. Python can't parse it.</li>
+        <li>Using <code>data.RECORDS</code> without <code>import data</code>, which raises <code>NameError</code>.</li>
+        <li>Creating the callback once at the top of the file. Then every question shares one trace.</li>
+      </ul>
+    </div>
+  </div></details>
+</section>
+
+<!-- ===================================================== 7 TRAFFIC -->
+<section id="traffic" data-group="Instrument" data-title="7. Send traffic and find the trace">
+  <h1>7. Send traffic and find the trace</h1>
+  <p class="lead">Run one question, find the trace, then send a batch so there is something to look at.</p>
+<pre><code>python app.py "Does the Meridian EX have hands-free highway driving?"</code></pre>
+  <p>In the console: main menu, select your project, select your agent stream, open <b>Traces</b>.</p>
+  <h3>Send a batch</h3>
+<pre><code># clean traffic
+FAILURE_MODE=none python run_batch.py 10
+
+# with the planted failure
+FAILURE_MODE=fabricated_citation python run_batch.py 5</code></pre>
+  <div class="callout warn"><b class="t">The batch shuffles the questions</b>
+    <code>run_batch.py</code> picks questions at random, so five failure-mode runs may not include the hands-free question. To guarantee the failure, run the targeted question a few times:
+<pre><code>for i in 1 2 3; do FAILURE_MODE=fabricated_citation python app.py "Does the Meridian EX have hands-free highway driving?"; done</code></pre></div>
+  <div class="done"><b>Done when:</b> a trace with the full tree is in your project, with your metadata on it.</div>
+
+  <details class="solution"><summary>Reference answer: what to check in the console</summary><div>
+    <ul>
+      <li>One trace per question, with a tree under it: intake, route, resolve and write steps, the model calls inside them, and a tool call on the action path.</li>
+      <li>Your five metadata keys on the trace, and the <code>auto-retail</code> tag.</li>
+      <li>On a failure run, the writer's input contains the <code>ARTICLES</code> block with <code>BR-999</code> and the <code>INVENTORY</code> record that contradicts it. This is what the judge compares.</li>
+      <li>Filter on <code>failure_mode</code> to split clean from failure traffic.</li>
+    </ul>
+    <p>Warnings such as <code>LangChainPendingDeprecationWarning</code> on start-up are harmless.</p>
+  </div></details>
+</section>
+
+<!-- ===================================================== 8 NOTES -->
+<section id="notes" data-group="Instrument" data-title="8. Instrumentation notes">
+  <h1>8. Instrumentation notes</h1>
+  <p class="lead">Answer four questions in your own words, two or three sentences each. Keep them with your worksheet as <code>readout/instrumentation-notes.md</code>. Your coach will ask about them.</p>
+  <ol>
+    <li>Where does a trace start and end in your agent, and why there?</li>
+    <li>Which parts of a run became which kind of span, and why?</li>
+    <li>What metadata did you attach, and which customer question does it answer?</li>
+    <li>What would you see in the console if you had instrumented only the model call?</li>
+  </ol>
+
+  <details class="solution"><summary>Reference answers</summary><div>
+    <h3>1. Where does a trace start and end?</h3>
+    <p>It starts when <code>ask()</code> calls <code>graph.invoke(...)</code> and ends when the graph returns the reply, so one shopper question is one trace. The callback is inside <code>ask()</code> because every question goes through it. A trace per model call would split one question across several traces, and the customer couldn't follow a question from request to reply. <code>flush_on_chain_end=True</code> sends the trace when the run ends.</p>
+    <h3>2. Which parts became which spans?</h3>
+    <p>I wrote no spans by hand. The callback reports what LangGraph does: the four steps, each model call inside them, and the tool call on the action path, as a tree under one trace. That matters here because the failure sits between the brochure lookup in <code>resolve</code> and the writer, so the customer can see which step handed the writer the bad claim. Check the exact span kinds and names in the console.</p>
+    <h3>3. What metadata, and what does it answer?</h3>
+    <p>Five keys. <code>business_unit</code> and <code>model</code> answer the buyer's interest in spend and governance. <code>failure_mode</code> separates clean from failure traffic, which supports the answer to "is this calibrated?". <code>shopper_id</code> and <code>dealer_id</code> find one conversation and group by dealer site. The <code>business_unit</code> default and the meaning of <code>dealer_id</code> are assumptions.</p>
+    <h3>4. Only the model call instrumented?</h3>
+    <p>I'd see model calls with prompts and replies, but no tree: no steps, no tool calls, and nothing tying calls into one shopper question. I could see the false claim but not whether the lookup, the routing or the writer caused it. Per-request cost would also be harder to attribute.</p>
+  </div></details>
+</section>
+
+<!-- ===================================================== 9 JUDGE -->
+<section id="judge" data-group="Evaluate and act" data-title="9. Build the custom judge">
+  <h1>9. Build the custom judge</h1>
+  <p class="lead">A custom LLM-as-a-judge evaluator that checks every claimed feature against the vehicle's inventory record. This is the win condition for the scenario.</p>
+  <div class="callout warn"><b class="t">Before you start</b>
+    LLM-judge evaluators need a <b>model integration on the org</b>. If the model picker is empty or errors, that's the org, not you. Ask the facilitator.</div>
+  <ol class="steps">
+    <li>Main menu, <b>Evaluators</b>, <b>Create evaluator</b>, <b>LLM-as-a-judge</b>.</li>
+    <li>Fill in the settings and paste the prompt (below).</li>
+    <li>Open <b>Test Evaluator</b> and run it against recent logged traces or spans.</li>
+    <li>Open your stream, <b>Configure Evaluators</b>, switch your evaluator on, <b>Save and close</b>.</li>
+    <li>Send fresh traffic. Only traces sent after you enable it get scored.</li>
+  </ol>
+  <div class="done"><b>Done when:</b> clean runs score <code>true</code> and failure runs score <code>false</code> with a rationale naming the brochure claim.</div>
+
+  <details class="solution"><summary>Reference answer: settings and prompt</summary><div>
+    <table>
+      <tr><th>Setting</th><th>Value</th><th>Why</th></tr>
+      <tr><td>Name</td><td><code>Feature claims grounded in inventory</code></td><td>Reads well on screen at the readout</td></tr>
+      <tr><td>Output type</td><td>Boolean</td><td>The customer's definition is pass or fail: a claimed feature is in the inventory record or it isn't</td></tr>
+      <tr><td>Apply to</td><td>LLM span</td><td>The inventory record is in the writer's model call input, not in the trace's top-level input</td></tr>
+      <tr><td>Model</td><td>One your org integration allows (for example <code>gpt-4.1-mini</code>)</td><td>Whatever the integration offers</td></tr>
+      <tr><td>Step-by-step reasoning</td><td>On</td><td>Produces the written rationale the head of ML will ask for</td></tr>
+      <tr><td>Number of judges</td><td>1 to start</td><td>More judges average out noise at higher cost; a calibration talking point</td></tr>
+    </table>
+    <p>Prompt: give a clear rubric ("Set true if... Set false if...") and don't add response-format instructions.</p>
+<pre><code>You are an impartial evaluator checking a car-shopping assistant for grounding.
+
+The input contains the shopper's question, marketing brochures, and the inventory record for the specific vehicle.
+The output is the assistant's reply to the shopper.
+
+Task: Determine whether every vehicle feature the reply says the vehicle has is listed in the inventory record for that vehicle. A feature mentioned only in a brochure does not count.
+
+Set true if every claimed feature is listed in the inventory record, or the reply makes no feature claims.
+Set false if the reply claims any feature that the inventory record does not list, or that the inventory record says is missing.</code></pre>
+    <div class="callout"><b class="t">If it also scores the intake and route calls</b>
+      Use evaluator filters: on Configure Evaluators, use the action menu next to the evaluator, <b>Apply filter</b>, and match on span name or span metadata. Check the writer span's name in a trace first.</div>
+    <div class="callout warn"><b class="t">Be honest about two things</b>
+      <ul><li>Don't call the judge calibrated. Calibration needs the customer's human-labeled examples. You can test the judge against a labeled dataset and report a macro F1 score.</li>
+      <li>The judge runs on the workshop's model, not the customer's. Say so if asked whose model is scoring.</li></ul></div>
+  </div></details>
+</section>
+
+<!-- ===================================================== 10 ALERT -->
+<section id="alert" data-group="Evaluate and act" data-title="10. Set up the alert">
+  <h1>10. Set up the alert</h1>
+  <p class="lead">Answers "how would I know without watching the UI?". It tells a person when the judge flags a failure.</p>
+  <ol class="steps">
+    <li>Main menu, select your project, select your agent stream, open the <b>Alerts</b> tab, then <b>Create alert</b>.</li>
+    <li>Set the four fields: evaluator, aggregation, threshold, time window.</li>
+    <li>Under <b>Notifications</b>, add a destination: email, Slack webhook, or a generic webhook.</li>
+    <li>Send failure traffic and wait a few minutes.</li>
+  </ol>
+  <div class="done"><b>Done when:</b> the destination shows <b>Active</b> and an alert arrives for a failure run.</div>
+
+  <details class="solution"><summary>Reference answer</summary><div>
+    <table>
+      <tr><th>Field</th><th>Value</th><th>Why</th></tr>
+      <tr><td>Evaluator</td><td><code>Feature claims grounded in inventory</code></td><td>Your custom judge. It must be enabled on the stream to appear.</td></tr>
+      <tr><td>Aggregation</td><td>Count</td><td>Any single failure should fire; an average would hide it</td></tr>
+      <tr><td>Threshold</td><td>Count of <code>false</code> values at least 1</td><td>The docs' hallucination example uses "Count = 1 for values = 0". A Boolean <code>false</code> is the equivalent.</td></tr>
+      <tr><td>Time window</td><td>15 minutes</td><td>Short, so the demo fires soon after the failure traffic</td></tr>
+    </table>
+    <ul>
+      <li><b>Email:</b> quickest. Add the address under Notifications. The email has an <b>Open Agent Stream</b> button that links to the bad traces.</li>
+      <li><b>Slack:</b> create an incoming webhook, paste its URL into the Slack Notification section, add the channel name in Notes, send the test message.</li>
+      <li><b>Generic webhook:</b> structured JSON for PagerDuty or an internal pipeline. More than this demo needs.</li>
+    </ul>
+    <p>If the Boolean evaluator doesn't offer a "values = false" threshold, use what the screen offers. The docs' examples are numeric.</p>
+    <p>Say at the readout that the alert is an addition to the customer's ask, tested with the planted failure.</p>
+  </div></details>
+</section>
+
+<!-- ===================================================== 11 CONTROL -->
+<section id="control" data-group="Evaluate and act" data-title="11. Add a runtime control">
+  <h1>11. Add a runtime control</h1>
+  <p class="lead">An alert tells someone. A control stops the bad reply before the shopper sees it. It has a console half and a code half.</p>
+  <p>Docs: <a href="https://agent-observability-docs.splunk.com/concepts/agent-control/overview.md" target="_blank" rel="noopener">Agent Control</a>, then Create a control, Initialize and configure, Monitor a control.</p>
+
+  <h2>Half 1: create the control (console)</h2>
+  <ol class="steps">
+    <li>Main menu, <b>Controls</b>, <b>Create new control</b>, choose the list evaluator.</li>
+    <li>Fill in the fields from the table below and <b>Save</b>.</li>
+    <li>Open your stream, the <b>Controls</b> tab, <b>Add control</b>, then <b>Add</b> next to yours. No redeploy is needed.</li>
+  </ol>
+  <table>
+    <tr><th>Field</th><th>Value</th></tr>
+    <tr><td>Name</td><td><code>block-ungrounded-brochure-claim</code></td></tr>
+    <tr><td>Applies to (step type)</td><td><b>LLM</b></td></tr>
+    <tr><td>Stage</td><td><b>Post</b> (after the model replies)</td></tr>
+    <tr><td>Selector path</td><td><code>output</code> (<code>*</code> also worked)</td></tr>
+    <tr><td>Evaluator</td><td>List: values <code>BR-999</code>, logic <b>any</b>, match on <b>match</b>, match mode <b>contains</b>, case sensitive <b>off</b></td></tr>
+    <tr><td>Action</td><td><b>Deny</b></td></tr>
+    <tr><td>Execution</td><td>Server</td></tr>
+  </table>
+
+  <h2>Half 2: wire it into the agent (code)</h2>
+  <p>Controls only fire on steps decorated for them. Three changes:</p>
+<pre><code>pip install "agent-control-sdk&gt;=8.5.0" "agent-control-evaluators&gt;=8.5.0" "agent-control-evaluator-galileo&gt;=8.5.0"</code></pre>
+
+  <details class="solution" open><summary>Reference answer: the code</summary><div>
+    <h3>1. Initialize once per process (<code>app.py</code>)</h3>
+<pre><code>_control_ready = False
+
+def init_agent_control() -&gt; None:
+    global _control_ready
+    if _control_ready:                       # run_batch.py calls ask() many times
+        return
+    import agent_control
+    from splunk_ao.logger import SplunkAOLogger
+
+    logger = SplunkAOLogger(
+        project=os.environ["SPLUNK_AO_PROJECT"],
+        agent_stream=os.environ["SPLUNK_AO_AGENT_STREAM"],
+    )
+    if logger.agent_stream_id is None:       # fail loudly, a control bound to nothing never fires
+        raise RuntimeError("Could not resolve the agent stream ID.")
+
+    agent_control.init(
+        agent_name=os.environ["AGENT_CONTROL_AGENT_NAME"],
+        agent_description="Auto-retail car-shopping assistant",
+        server_url=os.environ["AGENT_CONTROL_URL"],
+        api_key=os.environ["AGENT_CONTROL_API_KEY"],
+        api_key_header=os.environ.get("AGENT_CONTROL_API_KEY_HEADER", "Splunk-AO-API-Key"),
+        target_type=os.environ.get("AGENT_CONTROL_TARGET_TYPE", "log_stream"),
+        target_id=logger.agent_stream_id,    # the stream's ID, NOT its name
+    )
+    _control_ready = True
+
+def ask(graph, request, user_id=USER_ID):
+    init_agent_control()                     # first line of ask()
+    ...</code></pre>
+    <h3>2. Decorate the writer's model call (<code>agent/nodes.py</code>)</h3>
+<pre><code>from agent_control import control, ControlViolationError
+
+@control(step_name="write-reply")
+def _draft_reply(system: str, user_text: str) -&gt; str:
+    return llm(0.3).invoke([SystemMessage(system), HumanMessage(user_text)]).content
+
+BLOCKED_REPLY = ("I want to be sure I give you accurate details on that feature, so I've passed your "
+                 "question to a dealership specialist who will confirm it from the vehicle's inventory record.")
+
+def write(state):
+    ...
+    try:
+        reply = _draft_reply(system, f"Request: {state['request']}\n\n{context}")
+    except ControlViolationError:
+        return {"reply": BLOCKED_REPLY}      # never show the blocked text
+    ...</code></pre>
+    <h3>3. Environment variables (<code>.env</code>)</h3>
+<pre><code>AGENT_CONTROL_URL=&lt;agent control url&gt;
+AGENT_CONTROL_API_KEY=&lt;key&gt;
+AGENT_CONTROL_API_KEY_HEADER=Splunk-AO-API-Key
+AGENT_CONTROL_RUNTIME_AUTH_MODE=jwt
+AGENT_CONTROL_TARGET_TYPE=log_stream
+AGENT_CONTROL_AGENT_NAME=&lt;at least 10 characters&gt;</code></pre>
+    <p><b>How it works:</b> after the writer's model replies, the decorator sends the output to the Agent Control server. The control on your stream evaluates it. If it matches, the decorator raises <code>ControlViolationError</code> and <code>write()</code> returns the handoff message.</p>
+  </div></details>
+
+  <h2>Check what the SDK loaded</h2>
+  <p>When a control doesn't fire, print what the agent actually received:</p>
+<pre><code>python - &lt;&lt;'EOF'
+import os, sys
+sys.path.insert(0, os.getcwd())
+from dotenv import load_dotenv; load_dotenv(".env")
+import agent_control, app
+app.init_agent_control()
+for c in agent_control.get_server_controls():
+    print(c["name"], c["control"]["scope"], c["control"]["condition"]["evaluator"])
+EOF</code></pre>
+
+  <h2>Gotchas we hit</h2>
+  <table>
+    <tr><th>Symptom</th><th>Cause and fix</th></tr>
+    <tr><td><code>agent_name must be at least 10 characters long</code></td><td>The name was <code>agent-${INSTANCE}</code> and <code>INSTANCE</code> was undefined, so it became <code>agent-</code>. Set a real name.</td></tr>
+    <tr><td>Control never fires; reply has the false claim</td><td>Check the loaded control. Scope was <b>tool</b> steps, and the writer is an <b>LLM</b> step. Change <b>Applies to</b> to LLM.</td></tr>
+    <tr><td>Still never fires</td><td>Match mode was <code>exact</code>, which only matches if the whole reply equals the value. Use <code>contains</code>. A saved edit can also drop <code>match_mode</code> entirely, so re-check after saving.</td></tr>
+    <tr><td>Value shows with quotes in the console</td><td>If the loaded value prints as <code>['"BR-999"']</code> the quotes are part of the string, and it won't match. <code>['BR-999']</code> is correct. The console may display quotes without storing them.</td></tr>
+    <tr><td>Blocks the true answer too</td><td>The value included <code>hands-free</code>, which the correct reply also says. Match on <code>BR-999</code> only.</td></tr>
+    <tr><td><code>401 Unauthorized</code> on <code>/api/v1/evaluation</code>, every question crashes</td><td>Setting <code>AGENT_CONTROL_RUNTIME_TOKEN_HEADER=X-Agent-Control-Runtime-Token</code>, as the docs' example does, caused this on the workshop server. Leave it unset (default <code>Authorization</code>).</td></tr>
+    <tr><td>Edit to the control didn't change anything</td><td>Attaching a control clones it. Edit the clone on the stream. The SDK refreshes policies about every 60 seconds.</td></tr>
+    <tr><td>Two similar controls loaded</td><td>Re-adding made a clone. Remove the one you don't need so edits aren't made twice.</td></tr>
+  </table>
+  <div class="callout warn"><b class="t">It fails closed</b>
+    If Agent Control returns an error, the SDK blocks the reply, so every question fails, not just matching ones. That is safe but worth stating at the readout.</div>
+  <div class="done"><b>Done when:</b> the failure question returns the handoff message, and the clean answer to the same question still passes.</div>
+</section>
+
+<!-- ===================================================== 12 VALIDATE -->
+<section id="validate" data-group="Validate" data-title="12. Validate clean vs failure">
+  <h1>12. Validate clean vs failure</h1>
+  <p class="lead">Prove the failure gets caught and stopped, and that clean traffic is left alone.</p>
+  <ol class="steps">
+    <li>Send clean traffic: <code>FAILURE_MODE=none python run_batch.py 10</code>. Nothing should flag.</li>
+    <li>Send the failure: <code>FAILURE_MODE=fabricated_citation python run_batch.py 5</code>, plus the targeted question a few times.</li>
+    <li>In the console, confirm the judge flags the failure traces and its rationale says why.</li>
+    <li>Confirm the control blocked the reply and the alert fired.</li>
+    <li>Run the coach: <code>/coach agents/&lt;your folder&gt;</code> (Cursor: "coach agents/&lt;your folder&gt;").</li>
+  </ol>
+  <div class="done"><b>Done when:</b> the planted failure is caught and acted on, and clean traffic is left alone.</div>
+
+  <details class="solution"><summary>Reference answer: expected results</summary><div>
+    <table>
+      <tr><th>Test</th><th>Command</th><th>Expected</th></tr>
+      <tr><td>Failure on, hands-free question</td><td><code>FAILURE_MODE=fabricated_citation python app.py "Does the Meridian EX have hands-free highway driving?"</code></td><td>Blocked: "...passed your question to a dealership specialist..."</td></tr>
+      <tr><td>Failure off, same question</td><td><code>FAILURE_MODE=none python app.py "Does the Meridian EX have hands-free highway driving?"</code></td><td>Passes. The EX does <b>not</b> include hands-free driving, citing <code>BR-002</code></td></tr>
+      <tr><td>Failure off, unrelated</td><td><code>FAILURE_MODE=none python app.py "What would the monthly payment be on the Meridian LX with 3000 down over 60 months?"</code></td><td>Passes</td></tr>
+    </table>
+    <h3>Console checks</h3>
+    <ul>
+      <li><b>Judge:</b> a failure trace scores <code>false</code>; the rationale names the brochure claim the inventory record contradicts. Read two rationales aloud before the readout.</li>
+      <li><b>Control View:</b> on the stream, <b>Trends</b>, then <b>Default View</b>, then <b>Control View</b> shows executions and <code>deny</code> actions.</li>
+      <li><b>Trace tree:</b> open a blocked trace and check whether the control span appears inside it. The control is tied to a logger and your tracing uses the callback, so don't assume it does.</li>
+      <li><b>Judge on blocked runs:</b> confirm the judge still scores the model's draft on runs the control blocks.</li>
+    </ul>
+  </div></details>
+</section>
+
+<!-- ===================================================== 13 CRITERIA -->
+<section id="criteria" data-group="Present" data-title="13. Write the success criteria">
+  <h1>13. Write the success criteria</h1>
+  <p class="lead">File: <code>worksheets/success-criteria.md</code>. Save as <code>agents/&lt;your folder&gt;/readout/success-criteria.md</code>.</p>
+  <ol class="steps">
+    <li>Three to five lines, not a plan. Each in the customer's words, with how your demo proves it, from your worksheet rows.</li>
+    <li>One line for the <b>objection</b> this customer will raise and your answer.</li>
+    <li>One line for what you'd <b>hand off</b> because it isn't this product's job.</li>
+  </ol>
+  <div class="done"><b>Done when:</b> the customer would agree those are the criteria.</div>
+
+  <details class="solution"><summary>Reference answer</summary><div>
+    <table>
+      <tr><th>#</th><th>Criterion</th><th>How the demo proves it</th><th>Row</th></tr>
+      <tr><td>1</td><td>Evaluation owner: "We've seen these functionalities with other products." So show something new: a judge in his own definition of a bad answer catches the brochure-vs-inventory failure automatically.</td><td>Screen 1: the flagged Meridian EX trace, reply claims hands-free and cites <code>BR-999</code>, judge scores <code>false</code></td><td>1</td></tr>
+      <tr><td>2</td><td>"Is this calibrated?" Every flag comes with a written reason, and clean traffic stays unflagged, so they can compare with their human labels.</td><td>Screen 2: the rationale, and the <code>failure_mode</code> filter splitting clean from failure runs</td><td>2</td></tr>
+      <tr><td>3</td><td>Our addition, not a customer quote: the bad reply doesn't reach the shopper.</td><td>The same question returns the handoff reply with the control on, and the true answer still passes</td><td>3</td></tr>
+      <tr><td>4</td><td>Our addition, not a customer quote: someone is told without watching the console. Keep only if tied to the control row.</td><td>The alert on the judge's <code>false</code> score, by email or Slack</td><td>3</td></tr>
+      <tr><td>5</td><td>Buyer (paraphrase): tokenomics and one governance view across business units</td><td>Screen 3: cost and tokens per trace, filtered by <code>business_unit</code>; tokenomics for provider, model and user only</td><td>4</td></tr>
+    </table>
+    <h3>The objection</h3>
+    <p><b>They will say:</b> "We already have LangFuse and a judge we calibrate by hand. We've seen these functions."</p>
+    <p><b>We answer:</b> We're not replacing LangFuse; developers keep it for tracing. This sits next to it: your judge's definition of a bad answer runs on every trace, the failure is stopped before the shopper sees it, and someone is told. We can check the judge against your human-labeled examples to answer "is it calibrated" with your data.</p>
+    <h3>Not ours</h3>
+    <p>Improving the brochure-to-inventory data sync, which is where the bad claim comes from, belongs to the dealer-management-system team.</p>
+    <div class="callout warn"><b class="t">Check before you say it</b>
+      Don't present a criterion you haven't verified in the console: the alert firing, the <code>business_unit</code> filter, the judge scoring blocked runs.</div>
+  </div></details>
+</section>
+
+<!-- ===================================================== 14 READOUT -->
+<section id="readout" data-group="Present" data-title="14. The 10-minute readout">
+  <h1>14. The 10-minute readout</h1>
+  <p class="lead">Ten minutes as the customer meeting. Coaches play the roles and ask the quoted questions. Three screens, each tied to a real quote, then your success criteria. Then five minutes of feedback.</p>
+  <div class="callout warn"><b class="t">Keep the agent under two minutes</b>
+    The feedback guide flags more than two minutes spent on the agent itself.</div>
+
+  <details class="solution" open><summary>Reference answer: a timeline</summary><div>
+    <table>
+      <tr><th>Time</th><th>What you do</th><th>What you say</th></tr>
+      <tr><td>0:00-0:45</td><td>Open with the problem, not the product. No agent graph yet.</td><td>"Your shopper asks if the EX has hands-free driving. A brochure says yes, your inventory record says no. We'll show you catching that automatically."</td></tr>
+      <tr><td>0:45-2:15</td><td>The agent in one sentence: four steps, answers from brochures and inventory. Stop.</td><td>"The failure is planted so you can see the safeguards act."</td></tr>
+      <tr><td>2:15-4:30</td><td><b>Screen 1.</b> The flagged trace: false claim and <code>BR-999</code> next to the inventory record. The judge's <code>false</code> score.</td><td>"Your definition of a bad answer, run on every trace, with no human in the loop."</td></tr>
+      <tr><td>4:30-6:00</td><td><b>Screen 2.</b> Read the rationale aloud. Filter on <code>failure_mode</code>: clean unflagged, failure flagged.</td><td>"Here is why it flagged this one. To call it calibrated, we'd compare against your human labels."</td></tr>
+      <tr><td>6:00-7:30</td><td><b>Control.</b> Run the live question; show the handoff reply, then the clean answer passing.</td><td>"The false claim never reaches the shopper, and the true answer still gets through."</td></tr>
+      <tr><td>7:30-8:15</td><td><b>Alert.</b> Show the email or Slack message and open the trace from its link. (Cut if short on time.)</td><td>"You're told, and the link opens the exact trace."</td></tr>
+      <tr><td>8:15-9:00</td><td><b>Screen 3.</b> Cost and tokens per trace by <code>business_unit</code>. State what tokenomics doesn't attribute.</td><td>"Here is the right view for each claim."</td></tr>
+      <tr><td>9:00-10:00</td><td>Close: the objection, the hand-off, the next step.</td><td>"You keep LangFuse. This runs next to it. Next step: check the judge against your labeled examples."</td></tr>
+    </table>
+    <h3>Likely questions</h3>
+    <ul>
+      <li><b>Is the judge calibrated?</b> Not yet, and we don't claim it is. It uses your definition, shows a rationale on every score, and we'd compare with your human labels.</li>
+      <li><b>Why a custom judge, not a built-in evaluator?</b> The failure is customer-specific: a feature missing from this vehicle's inventory record. A built-in evaluator doesn't know your inventory.</li>
+      <li><b>Why a control and an alert?</b> The control stops this specific failure. The alert tells a person it happened.</li>
+      <li><b>Whose model scores this?</b> The workshop's model through a gateway. In production you'd choose.</li>
+      <li><b>What if the control service is down?</b> The SDK fails closed and blocks the reply, which is safe but means every question fails. Decide whether that's what you want.</li>
+    </ul>
+    <h3>Do not</h3>
+    <ul>
+      <li>Open with the agent graph, or spend more than two minutes on the agent.</li>
+      <li>Attack LangFuse.</li>
+      <li>Claim tokenomics attributes cost per agent or per trace.</li>
+      <li>Say the judge is calibrated.</li>
+    </ul>
+  </div></details>
+</section>
+
+<!-- ===================================================== 15 FEEDBACK -->
+<section id="feedback" data-group="Present" data-title="15. What coaches look for">
+  <h1>15. What coaches look for</h1>
+  <p class="lead">There are no scores. Coaches give feedback on the spot, using four questions in this order.</p>
+  <ol>
+    <li><b>Does every screen trace back to the customer?</b> Which quote does each screen answer? A screen with no quote behind it is a platform tour.</li>
+    <li><b>Are the evaluators and the control the right ones, and can you say why?</b> Luna versus LLM-judge should be a deliberate choice. If the planted failure wasn't caught, what would have caught it?</li>
+    <li><b>Would the customer agree with the success criteria?</b> Three to five, in their words, each with how it's proven, plus the objection and the answer. Any criterion the customer never asked for gets pointed out.</li>
+    <li><b>Can you explain every setting and every line you wrote?</b> Two settings and one line of instrumentation are picked at random.</li>
+  </ol>
+  <h3>Things a coach calls out</h3>
+  <ul>
+    <li>More than two minutes of the readout spent on the agent itself.</li>
+    <li>A skeleton that grew past four steps or four tools.</li>
+    <li>Claiming the product does something the scenario's traps say it doesn't.</li>
+    <li>Attacking the incumbent instead of answering the objection.</li>
+  </ul>
+  <details class="solution"><summary>Reference answer: prepare for the random picks</summary><div>
+    <ul>
+      <li><b>Settings:</b> why <code>flush_on_chain_end=True</code>; why the judge applies to an LLM span; why the control is Post stage, LLM step, <code>contains</code>, <code>deny</code>; why <code>BR-999</code> and not <code>hands-free</code>.</li>
+      <li><b>A line:</b> <code>config=config</code> in <code>graph.invoke</code> is what turns tracing on; <code>target_id=logger.agent_stream_id</code> binds the control to the stream by ID, not name.</li>
+      <li>End with one sentence: the single thing you'd do differently on your next real customer.</li>
+    </ul>
+  </div></details>
+</section>
+
+<!-- ===================================================== TROUBLESHOOTING -->
+<section id="trouble" data-group="Reference" data-title="Troubleshooting">
+  <h1>Troubleshooting</h1>
+  <p class="lead">Symptoms we ran into and what fixed them.</p>
+  <table>
+    <tr><th>Symptom</th><th>Likely cause</th><th>Fix</th></tr>
+    <tr><td><code>module 'langchain' has no attribute 'debug'</code></td><td>langchain 1.x with langchain-core 0.3.x</td><td><code>pip install "langchain&gt;=0.3,&lt;1.0"</code></td></tr>
+    <tr><td><code>403 key_model_access_denied</code></td><td>The key can't use that model</td><td>Set <code>OPENAI_MODEL</code> to an allowed model</td></tr>
+    <tr><td><code>NameError: data</code> in <code>ask()</code></td><td>Missing <code>import data</code></td><td>Add it at the top of <code>app.py</code></td></tr>
+    <tr><td>Syntax error in <code>app.py</code> after adding the callback</td><td>Merged statements or lines outside <code>ask()</code></td><td>One statement per line, all indented inside <code>ask()</code></td></tr>
+    <tr><td>No trace in the console</td><td>Wrong project or stream name, bad key, or the process exited before the flush</td><td>Check the <code>SPLUNK_AO_*</code> values; keep <code>flush_on_chain_end=True</code></td></tr>
+    <tr><td>Evaluator shows a model-integration error</td><td>The org has no model integration for LLM judges</td><td>Tell the facilitator; it's the org, not you</td></tr>
+    <tr><td>Judge doesn't flag the failure</td><td>It scored a span without the inventory record, or the failure question wasn't sent</td><td>Check which span it scores; run the targeted question</td></tr>
+    <tr><td>Five failure-mode runs show no failure</td><td><code>run_batch.py</code> shuffles questions</td><td>Run the targeted question a few times</td></tr>
+    <tr><td>Control doesn't fire</td><td>Scope, match mode, value, or the stream clone is out of date</td><td>See the gotchas table in step 11</td></tr>
+    <tr><td>Every question fails with a 401</td><td>Runtime token header set on a server that doesn't read it</td><td>Unset <code>AGENT_CONTROL_RUNTIME_TOKEN_HEADER</code></td></tr>
+    <tr><td><code>Cannot find empty port in range: 7860</code></td><td>The chat UI is already running</td><td>Stop the other copy, or use another port</td></tr>
+    <tr><td>Python can't reach the internet</td><td>Corporate proxy</td><td>See <code>coaching/proxy-fix.md</code> from the facilitator</td></tr>
+  </table>
+</section>
+
+<!-- ===================================================== CHEAT SHEET -->
+<section id="commands" data-group="Reference" data-title="Command cheat sheet">
+  <h1>Command cheat sheet</h1>
+  <p class="lead">Run these from <code>agents/auto-retail-langgraph</code> with the venv active.</p>
+<pre><code>source .venv/bin/activate</code></pre>
+  <table>
+    <tr><th>To do this</th><th>Command</th></tr>
+    <tr><td>Ask one question, failure off</td><td><code>python app.py "Does the Meridian EX have hands-free highway driving?"</code></td></tr>
+    <tr><td>Ask one question, failure on</td><td><code>FAILURE_MODE=fabricated_citation python app.py "Does the Meridian EX have hands-free highway driving?"</code></td></tr>
+    <tr><td>Clean batch (10)</td><td><code>FAILURE_MODE=none python run_batch.py 10</code></td></tr>
+    <tr><td>Failure batch (5)</td><td><code>FAILURE_MODE=fabricated_citation python run_batch.py 5</code></td></tr>
+    <tr><td>Targeted failure, three times</td><td><code>for i in 1 2 3; do FAILURE_MODE=fabricated_citation python app.py "Does the Meridian EX have hands-free highway driving?"; done</code></td></tr>
+    <tr><td>Skeleton check</td><td><code>python shared/check_skeleton.py agents/auto-retail-langgraph</code> (from repo root)</td></tr>
+    <tr><td>Run the coach</td><td><code>/coach agents/auto-retail-langgraph</code></td></tr>
+    <tr><td>Chat UI (stretch)</td><td><code>python ui.py</code>, then open <code>http://127.0.0.1:7860</code></td></tr>
+  </table>
+  <h3>Where things are</h3>
+  <table>
+    <tr><th>Item</th><th>Location</th></tr>
+    <tr><td>Scenario and brief</td><td><code>scenarios/auto-retail/SCENARIO.md</code>, <code>brief.yaml</code></td></tr>
+    <tr><td>Worksheet</td><td><code>worksheets/design-worksheet.md</code></td></tr>
+    <tr><td>Success criteria sheet</td><td><code>worksheets/success-criteria.md</code></td></tr>
+    <tr><td>What coaches look for</td><td><code>worksheets/feedback-guide.md</code></td></tr>
+    <tr><td>Your agent</td><td><code>agents/&lt;your folder&gt;/</code></td></tr>
+    <tr><td>Product docs and SDK</td><td><a href="https://agent-observability-docs.splunk.com" target="_blank" rel="noopener">agent-observability-docs.splunk.com</a></td></tr>
+  </table>
+</section>
+
+<!-- ===================================================== STRETCH -->
+<section id="stretch" data-group="Reference" data-title="Stretch: experiments and a UI">
+  <h1>Stretch: experiments and a UI</h1>
+  <p class="lead">Beyond the required steps. Use them if you have time.</p>
+
+  <h2>Test the judge against labeled examples</h2>
+  <p>This answers "is this calibrated?" with a number. It's a dataset test on the evaluator, not a full experiment.</p>
+  <ol class="steps">
+    <li>Build a labeled dataset. Each row needs <code>input</code>, <code>generated_output</code> and <b>Evaluator Ground Truth</b>: what the judge should return. Replies citing only <code>BR-002</code> are <code>true</code>; the failure replies citing <code>BR-999</code> are <code>false</code>. Add tricky ones, such as a true answer that mentions "hands-free".</li>
+    <li>Upload it under <b>Datasets</b>, <b>Create Dataset</b> (CSV or JSON) and map the columns.</li>
+    <li>Run the test on your evaluator through the Test Evaluator tab's dataset option. It reports a <b>macro F1 score</b> and aligned and misaligned rows.</li>
+    <li>Record the score, and rerun it after any change to the prompt, model or number of judges.</li>
+  </ol>
+  <div class="callout warn"><b class="t">One catch</b>
+    Dataset testing works for trace or LLM-span evaluators. The judge reads the inventory record from the writer's prompt, so each row's input must include that context, not just the question.</div>
+
+  <h2>Run the whole agent over a dataset</h2>
+  <p>Use <code>run_experiment(...)</code> with <code>function=</code> pointing at your agent to compare models, prompts or a fix, with one trace per dataset row. Your <code>questions.txt</code> is already a dataset. It needs an LLM integration.</p>
+  <div class="callout warn"><b class="t">Needs a code change first</b>
+    The docs say app code called from an experiment must not start its own trace or flush it. <code>ask()</code> creates its own callback with <code>flush_on_chain_end=True</code>, so it would need to use the experiment's logger instead (<code>splunk_ao_context.get_logger_instance()</code>). Read the "Get an existing logger" section of <i>Run Experiments in Code</i> first.</div>
+
+  <h2>A chat UI</h2>
+  <p>A small Gradio page can call the same <code>ask()</code>, so the callback, metadata and control still run on every message. It adds a shopper dropdown and a failure-mode dropdown, and shows when the control blocked a reply. Keep it out of the readout beyond triggering traffic, since time on the agent itself counts against you.</p>
+<pre><code>pip install gradio
+python ui.py        # http://127.0.0.1:7860</code></pre>
+</section>
+
+  <div class="pager" id="pager"></div>
+  <footer>
+    Unofficial study guide for the Splunk Agent Observability Customer Challenge, Auto-Retail scenario. Product names belong to their owners. Check the
+    <a href="https://agent-observability-docs.splunk.com" target="_blank" rel="noopener">official docs</a> for current behavior.
+  </footer>
+  </main>
+</div>
+
+<script>
+(function(){
+  var sections = Array.prototype.slice.call(document.querySelectorAll("main section"));
+  var side = document.getElementById("side");
+  var pager = document.getElementById("pager");
+
+  // Build the sidebar, grouped
+  var lastGroup = null;
+  sections.forEach(function(s){
+    var g = s.getAttribute("data-group");
+    if (g !== lastGroup){
+      var h = document.createElement("div"); h.className = "grp"; h.textContent = g; side.appendChild(h);
+      lastGroup = g;
+    }
+    var a = document.createElement("a");
+    a.href = "#" + s.id; a.textContent = s.getAttribute("data-title"); a.setAttribute("data-id", s.id);
+    side.appendChild(a);
+  });
+
+  // Copy buttons on every code block
+  document.querySelectorAll("pre").forEach(function(pre){
+    var b = document.createElement("button"); b.className = "cp"; b.type = "button"; b.textContent = "Copy";
+    b.addEventListener("click", function(){
+      var code = pre.querySelector("code");
+      var text = (code || pre).innerText;
+      var done = function(){ b.textContent = "Copied"; setTimeout(function(){ b.textContent = "Copy"; }, 1400); };
+      if (navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(done, function(){ b.textContent = "Select and copy"; }); }
+      else { b.textContent = "Select and copy"; }
+    });
+    pre.appendChild(b);
+  });
+
+  function show(){
+    var id = (location.hash || "").replace("#","") || sections[0].id;
+    var idx = sections.findIndex(function(s){ return s.id === id; });
+    if (idx < 0){ idx = 0; id = sections[0].id; }
+    sections.forEach(function(s,i){ s.classList.toggle("show", i === idx); });
+    side.querySelectorAll("a").forEach(function(a){ a.classList.toggle("active", a.getAttribute("data-id") === id); });
+    pager.innerHTML = "";
+    if (idx > 0){
+      var p = sections[idx-1]; var a1 = document.createElement("a"); a1.href = "#" + p.id; a1.className = "prev";
+      a1.innerHTML = "<small>Previous</small>" + p.getAttribute("data-title"); pager.appendChild(a1);
+    }
+    if (idx < sections.length - 1){
+      var n = sections[idx+1]; var a2 = document.createElement("a"); a2.href = "#" + n.id; a2.className = "next";
+      a2.innerHTML = "<small>Next</small>" + n.getAttribute("data-title"); pager.appendChild(a2);
+    }
+    document.title = sections[idx].getAttribute("data-title") + " | Auto-Retail Challenge Refresher";
+    side.classList.remove("open");
+    window.scrollTo(0,0);
+  }
+  window.addEventListener("hashchange", show);
+  show();
+
+  // Menu (mobile)
+  document.getElementById("menu-btn").addEventListener("click", function(){ side.classList.toggle("open"); });
+
+  // Theme toggle, remembered if storage is available
+  var root = document.documentElement;
+  try { var saved = localStorage.getItem("refresher-theme"); if (saved) root.setAttribute("data-theme", saved); } catch(e){}
+  document.getElementById("theme-btn").addEventListener("click", function(){
+    var cur = root.getAttribute("data-theme");
+    var dark = cur ? cur === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    var next = dark ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("refresher-theme", next); } catch(e){}
+  });
+})();
+</script>
+</body>
+</html>
