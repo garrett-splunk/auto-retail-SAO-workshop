@@ -340,6 +340,73 @@ FAILURE_MODE=fabricated_citation python app.py "Does the Meridian EX have hands-
       <li><code>failure.py</code> reads <code>FAILURE_MODE</code> on every call.</li>
     </ul>
   </div></details>
+  <h2 id="failure-switch">How the failure switch works</h2>
+  <p>The planted failure is one environment variable, <code>FAILURE_MODE</code>. Nothing is random and nothing relies on the model misbehaving. The code adds the fault itself, so it's reproducible every time.</p>
+
+  <h3>1. The value comes from the environment</h3>
+  <table>
+    <tr><th>Where</th><th>What it does</th></tr>
+    <tr><td><code>agents/&lt;your folder&gt;/.env</code></td><td>The default. The build skill writes <code>FAILURE_MODE=none</code> and a comment naming the scenario's failure (taken from <code>feared_failure.kind</code> in <code>brief.yaml</code>). So a normal run is clean.</td></tr>
+    <tr><td>The command line</td><td><code>FAILURE_MODE=fabricated_citation python app.py "..."</code> sets it for that one command only.</td></tr>
+    <tr><td><code>ui.py</code> (stretch)</td><td>Sets <code>os.environ["FAILURE_MODE"]</code> from the dropdown before each question.</td></tr>
+  </table>
+  <p><b>Precedence:</b> a value set in the shell beats <code>.env</code>. <code>load_dotenv()</code> only fills in variables that aren't already set, so <code>FAILURE_MODE=pii_leak python app.py ...</code> overrides the <code>none</code> in the file. (I checked this: with no shell value <code>mode()</code> returns <code>none</code>; with <code>FAILURE_MODE=pii_leak</code> it returns <code>pii_leak</code>.)</p>
+
+  <h3>2. <code>failure.py</code> turns it into two functions</h3>
+<pre><code>MODES = ("none", "fabricated_citation", "pii_leak", "wrong_tool", "injection_success", "latency", "wrong_category")
+
+def mode() -&gt; str:
+    m = os.getenv("FAILURE_MODE", "none").strip().lower()
+    return m if m in MODES else "none"       # a typo quietly becomes "none"
+
+def active(name: str) -&gt; bool:
+    return mode() == name</code></pre>
+  <ul>
+    <li><code>mode()</code> reads the variable <b>every time it's called</b>, not once at import. So changing it takes effect on the next question.</li>
+    <li>A value that isn't in <code>MODES</code> falls back to <code>none</code>. A typo like <code>fabricated_citaton</code> gives you a clean run with no error, so check the <code>[agent ready | failure_mode=...]</code> line the agent prints.</li>
+    <li>Only one mode is on at a time.</li>
+  </ul>
+
+  <h3>3. Steps in the agent check <code>active(...)</code></h3>
+  <p>The agent code asks "is this mode on?" at the spot where the fault belongs:</p>
+  <table>
+    <tr><th>Mode</th><th>Where</th><th>What it changes</th></tr>
+    <tr><td><code>fabricated_citation</code></td><td><code>agent/nodes.py</code>, <code>resolve()</code></td><td>On the knowledge route, appends the fake brochure <code>data.FAKE_ARTICLE</code> (<code>BR-999</code>, "every Meridian trim has hands-free driving") to the brochures the writer sees. The real inventory record, which says the EX lacks the feature, is still attached, so the two contradict each other. The writer repeats the brochure and cites <code>BR-999</code>.</td></tr>
+    <tr><td><code>pii_leak</code></td><td><code>agent/nodes.py</code>, <code>write()</code></td><td>Appends an "internal note" with a synthetic SSN to the reply.</td></tr>
+    <tr><td><code>injection_success</code></td><td><code>route()</code> and <code>write()</code></td><td>Stops an "ignore your instructions" request from being escalated, and appends a synthetic record to the reply as if the bot complied.</td></tr>
+    <tr><td><code>wrong_tool</code></td><td><code>route()</code></td><td>Flips the route between knowledge and action.</td></tr>
+    <tr><td><code>wrong_category</code></td><td><code>intake()</code></td><td>Forces the ticket category to <code>Other</code>.</td></tr>
+    <tr><td><code>latency</code></td><td><code>agent/tools.py</code>, <code>search_inventory()</code></td><td>Sleeps 6 seconds before searching.</td></tr>
+  </table>
+  <p>In this scenario only <code>fabricated_citation</code> is the customer's feared failure. The others are there for the other scenarios and for the built-in evaluator demos.</p>
+
+  <h3>4. The mode is recorded on each trace</h3>
+  <p>The metadata you add in step 6 includes <code>"failure_mode": mode()</code>. That's how you split clean from failure traffic in the console, and why the failure shows up as a filter value.</p>
+
+  <h3>Turn it on and off</h3>
+<pre><code># One command only
+FAILURE_MODE=fabricated_citation python app.py "Does the Meridian EX have hands-free highway driving?"
+
+# A whole batch
+FAILURE_MODE=fabricated_citation python run_batch.py 5
+
+# Back to clean: nothing set, so .env's "none" applies
+python app.py "Does the Meridian EX have hands-free highway driving?"</code></pre>
+  <div class="callout warn"><b class="t">Don't leave it on by accident</b>
+    <ul>
+      <li>If you edit <code>FAILURE_MODE</code> in <code>.env</code>, every later run stays in that mode until you change it back.</li>
+      <li>If you ran <code>export FAILURE_MODE=...</code> in your terminal, it lasts for that whole terminal session and beats <code>.env</code>. Clear it with <code>unset FAILURE_MODE</code>.</li>
+      <li>Always check the first line of output. It prints <code>failure_mode=...</code>.</li>
+    </ul>
+  </div>
+  <details class="solution"><summary>Reference answer: how to tell it's working</summary><div>
+    <ul>
+      <li><b>On:</b> the reply says the EX has hands-free driving and ends with <code>Sources: BR-999</code> (unless the control blocks it).</li>
+      <li><b>Off:</b> the reply says the EX does not have it and cites a real brochure such as <code>BR-002</code>.</li>
+      <li>The two replies are produced from the same question, so the only difference is the extra <code>BR-999</code> article added in <code>resolve()</code>.</li>
+    </ul>
+    <p>It's a demo-only switch. Nothing in a customer's real agent would look like this.</p>
+  </div></details>
 </section>
 
 <!-- ===================================================== 4 SETUP -->
